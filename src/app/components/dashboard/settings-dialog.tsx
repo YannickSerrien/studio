@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import {
@@ -26,12 +27,16 @@ type SettingsDialogProps = {
   children: React.ReactNode;
   settings: Settings;
   onSettingsChange: (settings: Settings) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function SettingsDialog({
   children,
   settings,
   onSettingsChange,
+  open,
+  onOpenChange
 }: SettingsDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<Settings>(settings);
 
@@ -40,7 +45,7 @@ export function SettingsDialog({
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -70,7 +75,7 @@ export function SettingsDialog({
             <Select
               value={currentSettings.currency}
               onValueChange={(value) =>
-                setCurrentSettings({ ...currentSettings, currency: value })
+                setCurrentSettings({ ...currentSettings, currency: value as Settings['currency'] })
               }
             >
               <SelectTrigger className="col-span-3">

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,7 +33,7 @@ export function WellnessNudge() {
           <div className="flex-1">
             <CardTitle className="text-base">Time for a break?</CardTitle>
             <CardDescription className="text-sm mt-1">
-              You've been driving for {driverStatusData.continuousDrivingHours}{' '}
+              You've been driving for {BREAK_THRESHOLD_HOURS}{' '}
               hours. A 45-minute break can help you recharge.
             </CardDescription>
           </div>
