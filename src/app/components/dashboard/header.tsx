@@ -50,18 +50,16 @@ export function Header() {
                   <Bot className="h-5 w-5" />
                   AI Chatbot
                 </Link>
-                <SettingsDialog settings={settings} onSettingsChange={setSettings} open={isSettingsOpen} onOpenChange={setSettingsOpen}>
-                   <button
-                    className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setSheetOpen(false);
-                      setSettingsOpen(true);
-                    }}
-                  >
-                    <Settings className="h-5 w-5" />
-                    Settings
-                  </button>
-                </SettingsDialog>
+                <button
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground text-lg font-medium"
+                  onClick={() => {
+                    setSheetOpen(false);
+                    setSettingsOpen(true);
+                  }}
+                >
+                  <Settings className="h-5 w-5" />
+                  Settings
+                </button>
               </nav>
           </SheetContent>
         </Sheet>
@@ -69,6 +67,10 @@ export function Header() {
           DriveWise
         </h1>
       </div>
+       <SettingsDialog settings={settings} onSettingsChange={setSettings} open={isSettingsOpen} onOpenChange={setSettingsOpen}>
+          {/* This is a dummy trigger because a trigger is required, but we are opening the dialog programmatically. */}
+          <button className="hidden"></button>
+      </SettingsDialog>
     </header>
   );
 }
