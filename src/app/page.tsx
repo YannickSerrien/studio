@@ -27,7 +27,7 @@ import { useDriverStatus } from '@/app/contexts/driver-status-context';
 
 export default function Home() {
   const [settings, setSettings] = useState<AppSettings>({
-    name: 'Driver',
+    name: 'Karen',
     currency: '$',
     location: 'San Francisco, CA',
   });

@@ -51,7 +51,7 @@ export default function ChatbotPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
-    name: 'Driver',
+    name: 'Karen',
     currency: '$',
     location: 'San Francisco, CA',
   });
