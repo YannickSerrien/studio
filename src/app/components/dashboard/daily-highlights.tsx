@@ -1,28 +1,15 @@
+
 'use client';
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Cell,
-} from 'recharts';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
-import { dailyHighlightsData, type Settings } from '@/app/lib/data';
+import { useState } from 'react';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { earningsData, type DailyMetric } from '@/app/lib/data';
+import { ChevronLeft, ChevronRight, Wallet, Car, Clock, Gift } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import type { Settings } from '@/app/lib/data';
 
 const chartConfig = {
   earnings: {
@@ -35,61 +22,93 @@ type DailyHighlightsProps = {
   currency: Settings['currency'];
 };
 
+const MetricItem = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) => (
+  <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 text-accent">{icon}</div>
+    <div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="text-lg font-bold">{value}</p>
+    </div>
+  </div>
+);
+
 export function DailyHighlights({ currency }: DailyHighlightsProps) {
-  const bestDay = dailyHighlightsData.reduce(
-    (max, day) => (day.earnings > max.earnings ? day : max),
-    dailyHighlightsData[0]
-  );
+  const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+  const [selectedDay, setSelectedDay] = useState<DailyMetric | null>(earningsData[0].dailyMetrics[0]);
+
+  const currentWeekData = earningsData[currentWeekIndex];
+
+  const handleBarClick = (data: any) => {
+    setSelectedDay(data.payload);
+  };
+
+  const goToPreviousWeek = () => {
+    setCurrentWeekIndex((prev) => Math.min(prev + 1, earningsData.length - 1));
+    setSelectedDay(earningsData[Math.min(currentWeekIndex + 1, earningsData.length - 1)].dailyMetrics[0]);
+  };
+
+  const goToNextWeek = () => {
+    setCurrentWeekIndex((prev) => Math.max(prev - 1, 0));
+     setSelectedDay(earningsData[Math.max(currentWeekIndex - 1, 0)].dailyMetrics[0]);
+  };
 
   return (
     <Card className="lg:col-span-3">
       <CardHeader>
-        <CardTitle>Daily Highlights</CardTitle>
-        <CardDescription>
-          Your best day this week was {bestDay.day} with {currency}
-          {bestDay.earnings.toFixed(2)} in earnings.
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardDescription>{currentWeekData.weekOf}</CardDescription>
+            <CardTitle className="text-3xl font-bold tracking-tight">
+              {currency}
+              {currentWeekData.totalEarnings.toFixed(2)}
+            </CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={goToPreviousWeek} disabled={currentWeekIndex === earningsData.length - 1}>
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous Week</span>
+            </Button>
+            <Button variant="outline" size="icon" onClick={goToNextWeek} disabled={currentWeekIndex === 0}>
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next Week</span>
+            </Button>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[250px] w-full">
+      <CardContent className="space-y-6">
+        <ChartContainer config={chartConfig} className="h-[200px] w-full">
           <ResponsiveContainer>
-            <BarChart
-              data={dailyHighlightsData}
-              margin={{ top: 5, right: 10, left: -10, bottom: 0 }}
-            >
+            <BarChart data={currentWeekData.dailyMetrics} margin={{ top: 5, right: 10, left: -10, bottom: 0 }} onClick={handleBarClick}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis
-                dataKey="day"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 3)}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) => `${currency}${value}`}
-              />
-              <Tooltip
-                cursor={false}
-                content={<ChartTooltipContent indicator="dot" />}
-              />
+              <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => value.slice(0, 3)} />
+              <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `${currency}${value}`} />
+              <Tooltip cursor={{ fill: 'hsl(var(--muted))', radius: 4 }} content={<ChartTooltipContent indicator="dot" />} />
               <Bar dataKey="earnings" radius={[4, 4, 0, 0]}>
-                {dailyHighlightsData.map((entry, index) => (
+                {currentWeekData.dailyMetrics.map((entry) => (
                   <Cell
-                    key={`cell-${index}`}
-                    fill={
-                      entry.day === bestDay.day
-                        ? 'hsl(var(--accent))'
-                        : 'hsl(var(--secondary))'
-                    }
+                    key={`cell-${entry.date}`}
+                    fill={selectedDay?.date === entry.date ? 'hsl(var(--accent))' : 'hsl(var(--secondary))'}
+                    className="cursor-pointer"
                   />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
+
+        {selectedDay && (
+          <div className="rounded-xl border bg-card p-4 shadow-sm animate-in fade-in-0">
+            <h3 className="text-lg font-medium leading-none tracking-tight mb-4">
+              Metrics for {selectedDay.day}, {selectedDay.date}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricItem icon={<Wallet className="h-5 w-5" />} label="Earnings" value={`${currency}${selectedDay.earnings.toFixed(2)}`} />
+              <MetricItem icon={<Car className="h-5 w-5" />} label="Trips" value={selectedDay.trips} />
+              <MetricItem icon={<Clock className="h-5 w-5" />} label="Online Time" value={`${selectedDay.onlineHours} hrs`} />
+              <MetricItem icon={<Gift className="h-5 w-5" />} label="Tips" value={`${currency}${selectedDay.tips.toFixed(2)}`} />
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
