@@ -38,7 +38,7 @@ export function IncentiveTracker() {
   const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
 
   return (
-    <Card className="lg:col-span-2">
+    <Card>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>

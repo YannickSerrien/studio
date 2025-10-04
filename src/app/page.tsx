@@ -48,11 +48,13 @@ export default function Home() {
           <Header settings={settings} onSettingsChange={setSettings} />
           <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="mx-auto max-w-7xl">
+              <IncentiveTracker />
+            </div>
+            <div className="mx-auto max-w-7xl">
               <WeeklySummary currency={settings.currency} />
             </div>
-            <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            <div className="mx-auto max-w-7xl">
               <DailyHighlights currency={settings.currency} />
-              <IncentiveTracker />
             </div>
           </main>
           <WellnessNudge />

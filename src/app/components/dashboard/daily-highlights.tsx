@@ -55,7 +55,7 @@ export function DailyHighlights({ currency }: DailyHighlightsProps) {
   };
 
   return (
-    <Card className="lg:col-span-3">
+    <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
