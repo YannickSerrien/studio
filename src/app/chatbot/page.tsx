@@ -25,19 +25,21 @@ export default function ChatbotPage() {
     if (!input.trim()) return;
 
     const userMessage: Message = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    const currentInput = input;
     setInput('');
     setIsLoading(true);
 
     try {
-      const chatHistory: ChatHistory = messages.map((msg) => ({
+      const chatHistory: ChatHistory = newMessages.slice(0, -1).map((msg) => ({
         role: msg.role,
         content: [{ text: msg.content }],
       }));
 
       const response = await chat({
         history: chatHistory,
-        message: input,
+        message: currentInput,
       });
 
       const modelMessage: Message = { role: 'model', content: response };

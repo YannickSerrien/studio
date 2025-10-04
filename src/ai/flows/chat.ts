@@ -1,7 +1,7 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
-import {generate} from 'genkit';
+import {generate} from 'genkit/ai';
 import {z} from 'genkit';
 import {Message} from 'genkit/ai';
 
