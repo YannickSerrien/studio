@@ -1,0 +1,103 @@
+'use client';
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { type Settings } from '@/app/lib/data';
+
+type SettingsDialogProps = {
+  children: React.ReactNode;
+  settings: Settings;
+  onSettingsChange: (settings: Settings) => void;
+};
+
+export function SettingsDialog({
+  children,
+  settings,
+  onSettingsChange,
+}: SettingsDialogProps) {
+  const [currentSettings, setCurrentSettings] = useState<Settings>(settings);
+
+  const handleSave = () => {
+    onSettingsChange(currentSettings);
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Settings</DialogTitle>
+          <DialogDescription>
+            Manage your app preferences here.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="location" className="text-right">
+              Location
+            </Label>
+            <Input
+              id="location"
+              value={currentSettings.location}
+              onChange={(e) =>
+                setCurrentSettings({ ...currentSettings, location: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="currency" className="text-right">
+              Currency
+            </Label>
+            <Select
+              value={currentSettings.currency}
+              onValueChange={(value) =>
+                setCurrentSettings({ ...currentSettings, currency: value })
+              }
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="$">USD ($)</SelectItem>
+                <SelectItem value="€">EUR (€)</SelectItem>
+                <SelectItem value="£">GBP (£)</SelectItem>
+                <SelectItem value="¥">JPY (¥)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="secondary">
+              Cancel
+            </Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button type="submit" onClick={handleSave}>
+              Save changes
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

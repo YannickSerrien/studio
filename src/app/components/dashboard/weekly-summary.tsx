@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { weeklySummaryData } from '@/app/lib/data';
+import { weeklySummaryData, type Settings } from '@/app/lib/data';
 
 const SummaryItem: FC<{ icon: React.ReactNode; label: string; value: string }> =
   ({ icon, label, value }) => (
@@ -25,14 +25,18 @@ function formatMinutes(minutes: number) {
   return `${h}h ${m}m`;
 }
 
-export function WeeklySummary() {
+type WeeklySummaryProps = {
+  currency: Settings['currency'];
+};
+
+export function WeeklySummary({ currency }: WeeklySummaryProps) {
   const { earnings, trips, tips, kms, onlineMinutes } = weeklySummaryData;
 
   const summaryItems = [
     {
       icon: <Wallet className="h-5 w-5 text-accent" />,
       label: 'Earnings',
-      value: `$${earnings.toFixed(2)}`,
+      value: `${currency}${earnings.toFixed(2)}`,
     },
     {
       icon: <Car className="h-5 w-5 text-accent" />,
@@ -42,7 +46,7 @@ export function WeeklySummary() {
     {
       icon: <Gift className="h-5 w-5 text-accent" />,
       label: 'Tips',
-      value: `$${tips.toFixed(2)}`,
+      value: `${currency}${tips.toFixed(2)}`,
     },
     {
       icon: <Route className="h-5 w-5 text-accent" />,

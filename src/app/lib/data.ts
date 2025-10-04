@@ -54,3 +54,8 @@ export type DriverStatus = {
 export const driverStatusData: DriverStatus = {
   continuousDrivingHours: 4.75,
 };
+
+export type Settings = {
+  currency: string;
+  location: string;
+};

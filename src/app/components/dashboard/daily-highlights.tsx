@@ -22,7 +22,7 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { dailyHighlightsData } from '@/app/lib/data';
+import { dailyHighlightsData, type Settings } from '@/app/lib/data';
 
 const chartConfig = {
   earnings: {
@@ -31,7 +31,11 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function DailyHighlights() {
+type DailyHighlightsProps = {
+  currency: Settings['currency'];
+};
+
+export function DailyHighlights({ currency }: DailyHighlightsProps) {
   const bestDay = dailyHighlightsData.reduce(
     (max, day) => (day.earnings > max.earnings ? day : max),
     dailyHighlightsData[0]
@@ -42,7 +46,7 @@ export function DailyHighlights() {
       <CardHeader>
         <CardTitle>Daily Highlights</CardTitle>
         <CardDescription>
-          Your best day this week was {bestDay.day} with $
+          Your best day this week was {bestDay.day} with {currency}
           {bestDay.earnings.toFixed(2)} in earnings.
         </CardDescription>
       </CardHeader>
@@ -65,7 +69,7 @@ export function DailyHighlights() {
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `${currency}${value}`}
               />
               <Tooltip
                 cursor={false}
