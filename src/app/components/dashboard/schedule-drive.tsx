@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { MapPin, Search, Loader2 } from 'lucide-react';
+import type { Settings } from '@/app/lib/data';
 
 type OptimizationResult = {
   best_positions: {
@@ -16,7 +17,11 @@ type OptimizationResult = {
   }[];
 };
 
-export function ScheduleDrive() {
+type ScheduleDriveProps = {
+  city: Settings['city'];
+};
+
+export function ScheduleDrive({ city }: ScheduleDriveProps) {
   const [hours, setHours] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +55,7 @@ export function ScheduleDrive() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ hours }),
+        body: JSON.stringify({ hours, city: parseInt(city, 10) }),
       });
 
       if (!response.ok) {

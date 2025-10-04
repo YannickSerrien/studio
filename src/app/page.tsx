@@ -31,6 +31,7 @@ export default function Home() {
     name: 'Karen',
     currency: '$',
     location: 'San Francisco, CA',
+    city: '3',
   });
   const { showWellnessNudge, setShowWellnessNudge } = useDriverStatus();
   const pathname = usePathname();
@@ -93,7 +94,7 @@ export default function Home() {
               <DriverStatus />
             </div>
             <div className="mx-auto max-w-7xl">
-              <ScheduleDrive />
+              <ScheduleDrive city={settings.city} />
             </div>
             <div className="mx-auto max-w-7xl">
               <IncentiveTracker />

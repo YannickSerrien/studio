@@ -103,4 +103,5 @@ export type Settings = {
   name: string;
   currency: string;
   location: string;
+  city: string;
 };

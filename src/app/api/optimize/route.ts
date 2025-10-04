@@ -5,10 +5,14 @@ import path from 'path';
 
 export async function POST(request: Request) {
   try {
-    const { hours } = await request.json();
+    const { hours, city } = await request.json();
 
     if (!hours || typeof hours !== 'number' || hours < 1 || hours > 24) {
       return NextResponse.json({ error: 'Invalid "hours" parameter. Must be a number between 1 and 24.' }, { status: 400 });
+    }
+
+    if (!city || typeof city !== 'number' || city < 1 || city > 5) {
+      return NextResponse.json({ error: 'Invalid "city" parameter. Must be a number between 1 and 5.' }, { status: 400 });
     }
 
     // Path to the Python executable and script
@@ -17,7 +21,7 @@ export async function POST(request: Request) {
 
     // Arguments for the script
     const scriptArgs = [
-      '--city', '3', // Hardcoded for now as per discussion
+      '--city', city.toString(),
       '--duration', hours.toString(),
       '--best-positions',
       '--json-output',

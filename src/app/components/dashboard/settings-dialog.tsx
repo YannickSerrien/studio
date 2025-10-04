@@ -24,7 +24,7 @@ import {
 import { type Settings } from '@/app/lib/data';
 
 type SettingsDialogProps = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   settings: Settings;
   onSettingsChange: (settings: Settings) => void;
   open?: boolean;
@@ -46,7 +46,7 @@ export function SettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
@@ -80,6 +80,28 @@ export function SettingsDialog({
               }
               className="col-span-3"
             />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="city" className="text-right">
+              City
+            </Label>
+            <Select
+              value={currentSettings.city}
+              onValueChange={(value) =>
+                setCurrentSettings({ ...currentSettings, city: value as Settings['city'] })
+              }
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select city" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Amsterdam</SelectItem>
+                <SelectItem value="2">Rotterdam</SelectItem>
+                <SelectItem value="3">Utrecht</SelectItem>
+                <SelectItem value="4">Eindhoven</SelectItem>
+                <SelectItem value="5">Den Haag</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="currency" className="text-right">
