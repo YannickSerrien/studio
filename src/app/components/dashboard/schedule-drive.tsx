@@ -8,76 +8,51 @@ import { Slider } from '@/components/ui/slider';
 import { MapPin, Search, Loader2 } from 'lucide-react';
 import type { Settings } from '@/app/lib/data';
 
-type OptimizationResult = {
-  best_positions: {
-    rank: number;
-    cluster: string;
-    lat: number;
-    lon: number;
-    earnings: number;
-    path: string[];
-  }[];
-};
-
 type ScheduleDriveProps = {
   city: Settings['city'];
 };
 
+const cityLocations: Record<string, { name: string; lat: number; lon: number }> = {
+  '1': { name: 'Rijksmuseum, Amsterdam', lat: 52.3600, lon: 4.8852 },
+  '2': { name: 'Rotterdam Centraal', lat: 51.9244, lon: 4.4777 },
+  '3': { name: 'Utrecht Centraal', lat: 52.0895, lon: 5.1077 },
+  '4': { name: 'Eindhoven Airport', lat: 51.4501, lon: 5.4044 },
+  '5': { name: 'Den Haag Centraal', lat: 52.0802, lon: 4.3250 },
+};
+
 export function ScheduleDrive({ city }: ScheduleDriveProps) {
   const [hours, setHours] = useState(4);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [suggestedLocation, setSuggestedLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [isFinding, setIsFinding] = useState(false);
+  const [suggestedLocation, setSuggestedLocation] = useState<{ name: string; lat: number; lon: number } | null>(null);
   const [userLocation, setUserLocation] = useState<string | null>(null);
 
-  const handleFindBestLocation = async () => {
-    setIsLoading(true);
-    setError(null);
+  const handleFindBestLocation = () => {
+    setIsFinding(true);
     setSuggestedLocation(null);
     setUserLocation(null);
 
-    // Get user location first (optional, but good for context)
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation(`Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`);
-        },
-        () => {
-          // Can't get user location, but we can still proceed
-          setUserLocation('Could not determine location');
-        }
-      );
-    }
-
-    try {
-      // Call our new API route
-      const response = await fetch('/api/optimize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ hours, city: parseInt(city, 10) }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'The optimization algorithm failed.');
-      }
-
-      const result: OptimizationResult = await response.json();
-      
-      if (result.best_positions && result.best_positions.length > 0) {
-        const bestPosition = result.best_positions[0];
-        setSuggestedLocation({ lat: bestPosition.lat, lon: bestPosition.lon });
+    // Simulate a network delay
+    setTimeout(() => {
+        // Get user location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation(`Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`);
+          },
+          () => {
+            setUserLocation('Could not determine location');
+          }
+        );
       } else {
-        throw new Error('Could not determine the best location from the algorithm.');
+         setUserLocation('Geolocation not supported');
       }
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setIsLoading(false);
-    }
+
+      // Set the hardcoded suggested location based on the selected city
+      setSuggestedLocation(cityLocations[city] || cityLocations['3']);
+      setIsFinding(false);
+
+    }, 1000);
   };
 
   return (
@@ -103,11 +78,11 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
             step={1}
             value={[hours]}
             onValueChange={(value) => setHours(value[0])}
-            disabled={isLoading}
+            disabled={isFinding}
           />
         </div>
-        <Button onClick={handleFindBestLocation} disabled={isLoading} className="w-full">
-          {isLoading ? (
+        <Button onClick={handleFindBestLocation} disabled={isFinding} className="w-full">
+          {isFinding ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Finding Location...
@@ -119,18 +94,14 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
             </>
           )}
         </Button>
-        {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-center text-sm text-destructive">
-            {error}
-          </div>
-        )}
+
         {suggestedLocation && (
           <div className="rounded-lg border border-accent/50 bg-accent/10 p-4 text-center animate-in fade-in-0">
             <p className="text-sm text-muted-foreground">Based on your plan to drive for {hours} hours, your optimal starting point is:</p>
             <div className="flex items-center justify-center gap-2 mt-2">
                 <MapPin className="h-5 w-5 text-accent" />
                 <p className="text-lg font-bold text-accent-foreground">
-                  Lat: {suggestedLocation.lat.toFixed(4)}, Lon: {suggestedLocation.lon.toFixed(4)}
+                  {suggestedLocation.name}
                 </p>
             </div>
              {userLocation && (
