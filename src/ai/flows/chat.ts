@@ -41,13 +41,15 @@ Example topics:
       content: h.content,
     }));
 
+    // For gemini-pro, we prepend the system prompt to the user's message
+    // if there is no prior history.
+    const prompt =
+      history.length > 0 ? message : `${systemPrompt}\n\nUSER: ${message}\nASSISTANT:`;
+
     const response = await ai.generate({
       model: 'googleai/gemini-pro',
-      prompt: message,
+      prompt: prompt,
       history: geminiHistory as Message[],
-      config: {
-        systemInstruction: systemPrompt,
-      }
     });
 
     return response.text;
