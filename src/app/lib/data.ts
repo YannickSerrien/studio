@@ -96,7 +96,7 @@ export type DriverStatus = {
 };
 
 export const driverStatusData: DriverStatus = {
-  continuousDrivingHours: 4.75,
+  continuousDrivingHours: 0,
 };
 
 export type Settings = {

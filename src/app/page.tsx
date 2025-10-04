@@ -21,12 +21,15 @@ import { Bot, LayoutDashboard, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
+import { DriverStatus } from '@/app/components/dashboard/driver-status';
 
 export default function Home() {
   const [settings, setSettings] = useState<AppSettings>({
     currency: '$',
     location: 'San Francisco, CA',
   });
+  const [isDriving, setIsDriving] = useState(false);
+  const [drivingSeconds, setDrivingSeconds] = useState(0);
   const pathname = usePathname();
 
   return (
@@ -67,6 +70,14 @@ export default function Home() {
           <Header />
           <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="mx-auto max-w-7xl">
+              <DriverStatus
+                isDriving={isDriving}
+                setIsDriving={setIsDriving}
+                drivingSeconds={drivingSeconds}
+                setDrivingSeconds={setDrivingSeconds}
+              />
+            </div>
+            <div className="mx-auto max-w-7xl">
               <IncentiveTracker />
             </div>
             <div className="mx-auto max-w-7xl">
@@ -76,7 +87,7 @@ export default function Home() {
               <DailyHighlights currency={settings.currency} />
             </div>
           </main>
-          <WellnessNudge />
+          <WellnessNudge showNudge={drivingSeconds > 60} />
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -3,21 +3,22 @@
 
 import { useState, useEffect } from 'react';
 import { Coffee, X } from 'lucide-react';
-import { driverStatusData } from '@/app/lib/data';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 const BREAK_THRESHOLD_HOURS = 4.5;
 
-export function WellnessNudge() {
-  const [showNudge, setShowNudge] = useState(false);
+type WellnessNudgeProps = {
+  showNudge: boolean;
+};
+
+export function WellnessNudge({ showNudge: initialShowNudge }: WellnessNudgeProps) {
+  const [showNudge, setShowNudge] = useState(initialShowNudge);
 
   useEffect(() => {
-    // In a real app, this would come from a real-time data source.
-    if (driverStatusData.continuousDrivingHours >= BREAK_THRESHOLD_HOURS) {
-      setShowNudge(true);
-    }
-  }, []);
+    setShowNudge(initialShowNudge);
+  }, [initialShowNudge]);
+
 
   if (!showNudge) {
     return null;
