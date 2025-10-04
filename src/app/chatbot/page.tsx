@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bot, User, Send, Loader2, LayoutDashboard } from 'lucide-react';
+import { Bot, User, Send, Loader2, LayoutDashboard, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,9 +17,12 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
+import type { Settings as AppSettings } from '@/app/lib/data';
 
 type Message = {
   role: 'user' | 'model';
@@ -46,6 +49,10 @@ export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>({
+    currency: '$',
+    location: 'San Francisco, CA',
+  });
   const pathname = usePathname();
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -111,6 +118,15 @@ export default function ChatbotPage() {
                   <span>AI Chatbot</span>
                 </SidebarMenuButton>
               </Link>
+            </SidebarMenuItem>
+            <SidebarSeparator />
+            <SidebarMenuItem>
+               <SettingsDialog settings={settings} onSettingsChange={setSettings}>
+                 <SidebarMenuButton tooltip="Settings">
+                    <Settings />
+                    <span>Settings</span>
+                </SidebarMenuButton>
+              </SettingsDialog>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
