@@ -43,11 +43,11 @@ Example topics:
 
     const response = await ai.generate({
       model: 'googleai/gemini-pro',
-      prompt: {
-        system: systemPrompt,
-        history: geminiHistory as Message[],
-        messages: [{role: 'user', content: [{text: message}]}],
-      },
+      prompt: message,
+      history: geminiHistory as Message[],
+      config: {
+        systemInstruction: systemPrompt,
+      }
     });
 
     return response.text;
