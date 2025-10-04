@@ -3,6 +3,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+const BREAK_THRESHOLD_SECONDS = 16200; // 4.5 hours
+
 type DriverStatusContextType = {
   isDriving: boolean;
   setIsDriving: (isDriving: boolean) => void;
@@ -10,6 +12,8 @@ type DriverStatusContextType = {
   setDrivingSeconds: (seconds: number) => void;
   isPaused: boolean;
   setIsPaused: (isPaused: boolean) => void;
+  showWellnessNudge: boolean;
+  setShowWellnessNudge: (show: boolean) => void;
 };
 
 const DriverStatusContext = createContext<DriverStatusContextType | undefined>(
@@ -20,12 +24,19 @@ export function DriverStatusProvider({ children }: { children: ReactNode }) {
   const [isDriving, setIsDriving] = useState(false);
   const [drivingSeconds, setDrivingSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [showWellnessNudge, setShowWellnessNudge] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isDriving && !isPaused) {
       interval = setInterval(() => {
-        setDrivingSeconds((prevSeconds) => prevSeconds + 1);
+        setDrivingSeconds((prevSeconds) => {
+          const newSeconds = prevSeconds + 1;
+          if (newSeconds === BREAK_THRESHOLD_SECONDS) {
+            setShowWellnessNudge(true);
+          }
+          return newSeconds;
+        });
       }, 1000);
     }
     return () => {
@@ -42,6 +53,8 @@ export function DriverStatusProvider({ children }: { children: ReactNode }) {
     setDrivingSeconds,
     isPaused,
     setIsPaused,
+    showWellnessNudge,
+    setShowWellnessNudge,
   };
 
   return (
@@ -58,4 +71,3 @@ export function useDriverStatus() {
   }
   return context;
 }
-

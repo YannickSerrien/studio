@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Power, Pause, Play } from 'lucide-react';
@@ -26,6 +25,7 @@ export function DriverStatus() {
     setDrivingSeconds,
     isPaused,
     setIsPaused,
+    setShowWellnessNudge
   } = useDriverStatus();
 
   const toggleDriving = () => {
@@ -34,6 +34,7 @@ export function DriverStatus() {
       setDrivingSeconds(0);
       setIsPaused(false);
       setIsDriving(false);
+      setShowWellnessNudge(false); // Reset the nudge when going offline
     } else {
       // Going online
       setDrivingSeconds(TIMER_START_SECONDS);

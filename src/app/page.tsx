@@ -25,26 +25,25 @@ import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import { DriverStatus } from '@/app/components/dashboard/driver-status';
 import { useDriverStatus } from '@/app/contexts/driver-status-context';
 
-const BREAK_THRESHOLD_SECONDS = 16200; // 4.5 hours
-
 export default function Home() {
   const [settings, setSettings] = useState<AppSettings>({
     name: 'Driver',
     currency: '$',
     location: 'San Francisco, CA',
   });
-  const { drivingSeconds } = useDriverStatus();
+  const { showWellnessNudge, setShowWellnessNudge } = useDriverStatus();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (drivingSeconds > BREAK_THRESHOLD_SECONDS) {
+    if (showWellnessNudge) {
       const queryParams = new URLSearchParams({
         prompt: `Hey ${settings.name}, you've been driving for a while now. Time for a well-deserved break! Let me know if you'd like some ideas for how to best spend your break time.`
       }).toString();
       router.push(`/chatbot?${queryParams}`);
+      setShowWellnessNudge(false); // Reset the nudge to prevent re-triggering
     }
-  }, [drivingSeconds, router, settings.name]);
+  }, [showWellnessNudge, router, settings.name, setShowWellnessNudge]);
 
 
   return (
@@ -97,7 +96,7 @@ export default function Home() {
               <DailyHighlights currency={settings.currency} />
             </div>
           </main>
-          <WellnessNudge showNudge={drivingSeconds > BREAK_THRESHOLD_SECONDS} />
+          <WellnessNudge />
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -5,19 +5,19 @@ import { useState, useEffect } from 'react';
 import { Coffee, X } from 'lucide-react';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useDriverStatus } from '@/app/contexts/driver-status-context';
 
 const BREAK_THRESHOLD_HOURS = 4.5;
 
-type WellnessNudgeProps = {
-  showNudge: boolean;
-};
-
-export function WellnessNudge({ showNudge: initialShowNudge }: WellnessNudgeProps) {
-  const [showNudge, setShowNudge] = useState(initialShowNudge);
+export function WellnessNudge() {
+  const { showWellnessNudge: shouldShowNudge } = useDriverStatus();
+  const [showNudge, setShowNudge] = useState(false);
 
   useEffect(() => {
-    setShowNudge(initialShowNudge);
-  }, [initialShowNudge]);
+    if (shouldShowNudge) {
+      setShowNudge(true);
+    }
+  }, [shouldShowNudge]);
 
 
   if (!showNudge) {
