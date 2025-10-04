@@ -23,6 +23,8 @@ import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import { DriverStatus } from '@/app/components/dashboard/driver-status';
 
+const BREAK_THRESHOLD_SECONDS = 16200; // 4.5 hours
+
 export default function Home() {
   const [settings, setSettings] = useState<AppSettings>({
     currency: '$',
@@ -87,7 +89,7 @@ export default function Home() {
               <DailyHighlights currency={settings.currency} />
             </div>
           </main>
-          <WellnessNudge showNudge={drivingSeconds > 60} />
+          <WellnessNudge showNudge={drivingSeconds > BREAK_THRESHOLD_SECONDS} />
         </div>
       </SidebarInset>
     </SidebarProvider>

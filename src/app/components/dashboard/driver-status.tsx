@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Power } from 'lucide-react';
+import { Power, Pause, Play } from 'lucide-react';
 
 type DriverStatusProps = {
   isDriving: boolean;
@@ -11,6 +11,8 @@ type DriverStatusProps = {
   drivingSeconds: number;
   setDrivingSeconds: (seconds: number) => void;
 };
+
+const TIMER_START_SECONDS = 16190; // 4.5 hours - 10 seconds
 
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
@@ -27,29 +29,37 @@ export function DriverStatus({
   drivingSeconds,
   setDrivingSeconds,
 }: DriverStatusProps) {
+  const [isPaused, setIsPaused] = useState(false);
+
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isDriving) {
+    if (isDriving && !isPaused) {
       interval = setInterval(() => {
         setDrivingSeconds(drivingSeconds + 1);
       }, 1000);
-    } else if (!isDriving && drivingSeconds !== 0) {
-      if (interval) {
-        clearInterval(interval);
-      }
     }
     return () => {
       if (interval) {
         clearInterval(interval);
       }
     };
-  }, [isDriving, drivingSeconds, setDrivingSeconds]);
+  }, [isDriving, isPaused, drivingSeconds, setDrivingSeconds]);
 
   const toggleDriving = () => {
     if (isDriving) {
+      // Going offline
       setDrivingSeconds(0);
+      setIsPaused(false);
+      setIsDriving(false);
+    } else {
+      // Going online
+      setDrivingSeconds(TIMER_START_SECONDS);
+      setIsDriving(true);
     }
-    setIsDriving(!isDriving);
+  };
+
+  const togglePause = () => {
+    setIsPaused(!isPaused);
   };
 
   return (
@@ -57,13 +67,19 @@ export function DriverStatus({
       <div className="flex items-center gap-4">
         <div
           className={`h-3 w-3 rounded-full ${
-            isDriving ? 'bg-green-500' : 'bg-gray-400'
+            isDriving && !isPaused ? 'bg-green-500' : 'bg-gray-400'
           }`}
         />
         <div>
-          <p className="font-medium">{isDriving ? 'Online' : 'Offline'}</p>
+          <p className="font-medium">
+            {isDriving ? (isPaused ? 'Paused' : 'Online') : 'Offline'}
+          </p>
           <p className="text-sm text-muted-foreground">
-            {isDriving ? 'Actively looking for rides' : 'Not accepting rides'}
+            {isDriving
+              ? isPaused
+                ? 'On a break'
+                : 'Actively looking for rides'
+              : 'Not accepting rides'}
           </p>
         </div>
       </div>
@@ -75,6 +91,16 @@ export function DriverStatus({
             </p>
             <p className="text-xs text-muted-foreground">Session Time</p>
           </div>
+        )}
+        {isDriving && (
+          <Button
+            onClick={togglePause}
+            variant="outline"
+            size="icon"
+            aria-label={isPaused ? 'Resume Driving' : 'Pause Driving'}
+          >
+            {isPaused ? <Play /> : <Pause />}
+          </Button>
         )}
         <Button
           onClick={toggleDriving}
