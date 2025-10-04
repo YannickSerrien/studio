@@ -9,6 +9,26 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { incentiveData } from '@/app/lib/data';
 
+const HighlightedDescription = ({ text }: { text: string }) => {
+  const bonusRegex = /(\$\d+ bonus)/;
+  const parts = text.split(bonusRegex);
+
+  return (
+    <p>
+      {parts.map((part, index) => {
+        if (bonusRegex.test(part)) {
+          return (
+            <span key={index} className="font-bold text-accent">
+              {part}
+            </span>
+          );
+        }
+        return part;
+      })}
+    </p>
+  );
+};
+
 export function IncentiveTracker() {
   const { title, description, current, goal, unit, daysLeft } = incentiveData;
   const progressPercentage = (current / goal) * 100;
@@ -21,7 +41,9 @@ export function IncentiveTracker() {
         <div className="flex items-start justify-between">
           <div>
             <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
+            <CardDescription>
+              <HighlightedDescription text={description} />
+            </CardDescription>
           </div>
           <Target className="h-8 w-8 text-accent" />
         </div>
