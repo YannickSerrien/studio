@@ -7,6 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { MapPin, Search, Loader2 } from 'lucide-react';
 
+type OptimizationResult = {
+  best_positions: {
+    rank: number;
+    cluster: string;
+    earnings: number;
+    path: string[];
+  }[];
+};
+
 export function ScheduleDrive() {
   const [hours, setHours] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
@@ -14,49 +23,54 @@ export function ScheduleDrive() {
   const [suggestedLocation, setSuggestedLocation] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<string | null>(null);
 
-  const handleFindBestLocation = () => {
+  const handleFindBestLocation = async () => {
     setIsLoading(true);
     setError(null);
     setSuggestedLocation(null);
     setUserLocation(null);
 
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.');
-      setIsLoading(false);
-      return;
+    // Get user location first (optional, but good for context)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation(`Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`);
+        },
+        () => {
+          // Can't get user location, but we can still proceed
+          setUserLocation('Could not determine location');
+        }
+      );
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        // For now, we're not using the coords, but you would pass them to your algorithm.
-        setUserLocation(`Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`);
+    try {
+      // Call our new API route
+      const response = await fetch('/api/optimize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ hours }),
+      });
 
-        // Simulate an API call to your algorithm
-        setTimeout(() => {
-          // Hardcoded output from your future algorithm
-          setSuggestedLocation('Financial District, San Francisco');
-          setIsLoading(false);
-        }, 1500);
-      },
-      (error) => {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            setError('You denied the request for Geolocation.');
-            break;
-          case error.POSITION_UNAVAILABLE:
-            setError('Location information is unavailable.');
-            break;
-          case error.TIMEOUT:
-            setError('The request to get user location timed out.');
-            break;
-          default:
-            setError('An unknown error occurred.');
-            break;
-        }
-        setIsLoading(false);
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'The optimization algorithm failed.');
       }
-    );
+
+      const result: OptimizationResult = await response.json();
+      
+      if (result.best_positions && result.best_positions.length > 0) {
+        // Display the top-ranked cluster
+        setSuggestedLocation(result.best_positions[0].cluster);
+      } else {
+        throw new Error('Could not determine the best location from the algorithm.');
+      }
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
