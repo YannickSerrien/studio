@@ -24,6 +24,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import { DriverStatus } from '@/app/components/dashboard/driver-status';
 import { useDriverStatus } from '@/app/contexts/driver-status-context';
+import { ScheduleDrive } from '@/app/components/dashboard/schedule-drive';
 
 export default function Home() {
   const [settings, setSettings] = useState<AppSettings>({
@@ -34,6 +35,7 @@ export default function Home() {
   const { showWellnessNudge, setShowWellnessNudge } = useDriverStatus();
   const pathname = usePathname();
   const router = useRouter();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (showWellnessNudge) {
@@ -51,6 +53,10 @@ export default function Home() {
       <Sidebar>
         <SidebarContent>
           <SidebarMenu>
+            {/* This is the mobile-only header */}
+             <div className="p-4 sm:hidden">
+                <Header />
+            </div>
             <SidebarMenuItem>
               <Link href="/">
                 <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'}>
@@ -69,22 +75,25 @@ export default function Home() {
             </SidebarMenuItem>
             <SidebarSeparator />
             <SidebarMenuItem>
-              <SettingsDialog settings={settings} onSettingsChange={setSettings}>
-                 <SidebarMenuButton tooltip="Settings">
+                <SidebarMenuButton tooltip="Settings" onClick={() => setIsSettingsOpen(true)}>
                     <Settings />
                     <span>Settings</span>
                 </SidebarMenuButton>
-              </SettingsDialog>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col min-h-screen bg-background">
-          <Header />
+          <div className="hidden sm:block">
+            <Header />
+          </div>
           <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="mx-auto max-w-7xl">
               <DriverStatus />
+            </div>
+            <div className="mx-auto max-w-7xl">
+              <ScheduleDrive />
             </div>
             <div className="mx-auto max-w-7xl">
               <IncentiveTracker />
@@ -99,6 +108,7 @@ export default function Home() {
           <WellnessNudge />
         </div>
       </SidebarInset>
+       <SettingsDialog settings={settings} onSettingsChange={setSettings} open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </SidebarProvider>
   );
 }
