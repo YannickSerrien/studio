@@ -12,6 +12,8 @@ type OptimizationResult = {
   best_positions: {
     rank: number;
     cluster: string;
+    lat: number;
+    lon: number;
     earnings: number;
     path: string[];
   }[];
@@ -25,7 +27,7 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
   const [hours, setHours] = useState(4);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [suggestedLocation, setSuggestedLocation] = useState<string | null>(null);
+  const [suggestedLocation, setSuggestedLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [userLocation, setUserLocation] = useState<string | null>(null);
 
   const handleFindBestLocation = async () => {
@@ -66,8 +68,8 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
       const result: OptimizationResult = await response.json();
       
       if (result.best_positions && result.best_positions.length > 0) {
-        // Display the top-ranked cluster
-        setSuggestedLocation(result.best_positions[0].cluster);
+        const bestPosition = result.best_positions[0];
+        setSuggestedLocation({ lat: bestPosition.lat, lon: bestPosition.lon });
       } else {
         throw new Error('Could not determine the best location from the algorithm.');
       }
@@ -127,7 +129,9 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
             <p className="text-sm text-muted-foreground">Based on your plan to drive for {hours} hours, your optimal starting point is:</p>
             <div className="flex items-center justify-center gap-2 mt-2">
                 <MapPin className="h-5 w-5 text-accent" />
-                <p className="text-lg font-bold text-accent-foreground">{suggestedLocation}</p>
+                <p className="text-lg font-bold text-accent-foreground">
+                  Lat: {suggestedLocation.lat.toFixed(4)}, Lon: {suggestedLocation.lon.toFixed(4)}
+                </p>
             </div>
              {userLocation && (
               <p className="text-xs text-muted-foreground mt-2">(Your location: {userLocation})</p>

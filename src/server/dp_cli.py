@@ -124,6 +124,7 @@ Examples:
         sys.exit(1)
 
     results = {}
+    graph = optimizer.graphs[args.city]
 
     try:
         # Execute analysis based on selected type
@@ -137,8 +138,11 @@ Examples:
             earnings, path = optimizer.solve_dp(
                 args.city, args.cluster, args.hour, args.duration, args.date
             )
+            node_data = graph.nodes[args.cluster]
             results['cluster_analysis'] = {
                 'cluster': args.cluster,
+                'lat': node_data.get('lat'),
+                'lon': node_data.get('lon'),
                 'total_earnings': earnings,
                 'hourly_rate': earnings/args.duration,
                 'optimal_path': path
@@ -159,15 +163,25 @@ Examples:
                 args.city, args.hour, args.duration, args.date, args.top_k
             )
 
-            results['best_positions'] = [
-                {'rank': i, 'cluster': cluster, 'earnings': earnings, 'path': path}
-                for i, (cluster, earnings, path) in enumerate(best_positions, 1)
-            ]
+            positions_with_coords = []
+            for i, (cluster, earnings, path) in enumerate(best_positions, 1):
+                node_data = graph.nodes[cluster]
+                positions_with_coords.append({
+                    'rank': i,
+                    'cluster': cluster,
+                    'lat': node_data.get('lat'),
+                    'lon': node_data.get('lon'),
+                    'earnings': earnings,
+                    'path': path
+                })
+
+            results['best_positions'] = positions_with_coords
+            
             if not args.json_output:
-              for i, (cluster, earnings, path) in enumerate(best_positions, 1):
-                  print(f"{i:2d}. {cluster}: €{earnings:.2f} (€{earnings/args.duration:.2f}/h)")
+              for pos in positions_with_coords:
+                  print(f"{pos['rank']:2d}. {pos['cluster']} (Lat: {pos['lat']:.4f}, Lon: {pos['lon']:.4f}): €{pos['earnings']:.2f} (€{pos['earnings']/args.duration:.2f}/h)")
                   if args.verbose:
-                      print(f"    Path: {' -> '.join(path)}")
+                      print(f"    Path: {' -> '.join(pos['path'])}")
 
         elif args.compare_schedules:
             # ... (rest of the analysis types can be filled in similarly)
