@@ -47,7 +47,6 @@ Example topics:
       history.length > 0 ? message : `${systemPrompt}\n\nUSER: ${message}\nASSISTANT:`;
 
     const response = await ai.generate({
-      model: 'googleai/gemini-pro',
       prompt: prompt,
       history: geminiHistory as Message[],
     });
