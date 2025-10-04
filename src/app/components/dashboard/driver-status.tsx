@@ -1,16 +1,11 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Power, Pause, Play } from 'lucide-react';
-
-type DriverStatusProps = {
-  isDriving: boolean;
-  setIsDriving: (isDriving: boolean) => void;
-  drivingSeconds: number;
-  setDrivingSeconds: (seconds: number) => void;
-};
+import { useDriverStatus } from '@/app/contexts/driver-status-context';
 
 const TIMER_START_SECONDS = 16190; // 4.5 hours - 10 seconds
 
@@ -23,27 +18,15 @@ function formatDuration(totalSeconds: number) {
     .join(':');
 }
 
-export function DriverStatus({
-  isDriving,
-  setIsDriving,
-  drivingSeconds,
-  setDrivingSeconds,
-}: DriverStatusProps) {
-  const [isPaused, setIsPaused] = useState(false);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isDriving && !isPaused) {
-      interval = setInterval(() => {
-        setDrivingSeconds(drivingSeconds + 1);
-      }, 1000);
-    }
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [isDriving, isPaused, drivingSeconds, setDrivingSeconds]);
+export function DriverStatus() {
+  const {
+    isDriving,
+    setIsDriving,
+    drivingSeconds,
+    setDrivingSeconds,
+    isPaused,
+    setIsPaused,
+  } = useDriverStatus();
 
   const toggleDriving = () => {
     if (isDriving) {

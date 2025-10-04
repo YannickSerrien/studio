@@ -20,9 +20,10 @@ import {
 } from '@/components/ui/sidebar';
 import { Bot, LayoutDashboard, Settings } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import { DriverStatus } from '@/app/components/dashboard/driver-status';
+import { useDriverStatus } from '@/app/contexts/driver-status-context';
 
 const BREAK_THRESHOLD_SECONDS = 16200; // 4.5 hours
 
@@ -32,8 +33,7 @@ export default function Home() {
     currency: '$',
     location: 'San Francisco, CA',
   });
-  const [isDriving, setIsDriving] = useState(false);
-  const [drivingSeconds, setDrivingSeconds] = useState(0);
+  const { drivingSeconds } = useDriverStatus();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -85,12 +85,7 @@ export default function Home() {
           <Header />
           <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="mx-auto max-w-7xl">
-              <DriverStatus
-                isDriving={isDriving}
-                setIsDriving={setIsDriving}
-                drivingSeconds={drivingSeconds}
-                setDrivingSeconds={setDrivingSeconds}
-              />
+              <DriverStatus />
             </div>
             <div className="mx-auto max-w-7xl">
               <IncentiveTracker />
