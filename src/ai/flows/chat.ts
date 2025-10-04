@@ -1,9 +1,8 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
-import {generate} from 'genkit/ai';
-import {z} from 'genkit';
-import {Message} from 'genkit/ai';
+import {generate, Message} from 'genkit';
+import {z} from 'zod';
 
 const ChatHistorySchema = z.array(
   z.object({
@@ -43,7 +42,7 @@ Example topics:
     }));
 
     const response = await generate({
-      model: 'googleai/gemini-2.5-flash',
+      model: 'googleai/gemini-pro',
       prompt: {
         system: systemPrompt,
         history: geminiHistory as Message[],
