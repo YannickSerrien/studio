@@ -15,6 +15,19 @@ type Message = {
   content: string;
 };
 
+function FormattedMessage({ content }: { content: string }) {
+  const formattedContent = content
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\* (.*?)(?=\n\* |$)/g, '<li>$1</li>')
+    .replace(/(\d)\. (.*?)(?=\n\d\. |$)/g, '<li style="list-style-type: decimal; margin-left: 20px;">$2</li>');
+
+  const createMarkup = () => {
+    return { __html: formattedContent.replace(/\n/g, '<br />') };
+  };
+
+  return <div dangerouslySetInnerHTML={createMarkup()} />;
+}
+
 export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -91,7 +104,11 @@ export default function ChatbotPage() {
                             : 'bg-muted'
                         )}
                       >
-                        <p>{message.content}</p>
+                        {message.role === 'user' ? (
+                          <p>{message.content}</p>
+                        ) : (
+                          <FormattedMessage content={message.content} />
+                        )}
                       </div>
                       {message.role === 'user' && (
                         <Avatar className="h-8 w-8">
