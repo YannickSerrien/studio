@@ -2,30 +2,36 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
+import { promises as fs } from 'fs';
+import os from 'os';
+
+async function writeJsonOutput(data: any) {
+  const tempDir = os.tmpdir();
+  const tempFile = path.join(tempDir, `optimizer-results-${Date.now()}.json`);
+  await fs.writeFile(tempFile, JSON.stringify(data, null, 2));
+  return tempFile;
+}
 
 export async function POST(request: Request) {
   try {
-    const { hours, city } = await request.json();
+    const { city } = await request.json();
 
-    if (!hours || typeof hours !== 'number' || hours < 1 || hours > 24) {
-      return NextResponse.json({ error: 'Invalid "hours" parameter. Must be a number between 1 and 24.' }, { status: 400 });
-    }
-
-    if (!city || typeof city !== 'number' || city < 1 || city > 5) {
-      return NextResponse.json({ error: 'Invalid "city" parameter. Must be a number between 1 and 5.' }, { status: 400 });
+    if (!city || typeof city !== 'string' || !['1', '2', '3', '4', '5'].includes(city)) {
+      return NextResponse.json({ error: 'Invalid "city" parameter. Must be a string from "1" to "5".' }, { status: 400 });
     }
 
     // Path to the Python executable and script
-    const pythonExecutable = process.env.NODE_ENV === 'production' ? 'python3' : 'python3';
+    const pythonExecutable = 'python3';
     const scriptPath = path.join(process.cwd(), 'src', 'server', 'dp_cli.py');
+    const tempOutputFile = path.join(os.tmpdir(), `results-${Date.now()}.json`);
+    const dateToday = new Date().toISOString().split('T')[0];
 
     // Arguments for the script
     const scriptArgs = [
-      '--city', city.toString(),
-      '--duration', hours.toString(),
-      '--best-positions',
-      '--json-output',
-      '--top-k', '1'
+      '--city', city,
+      '--date', dateToday,
+      '--compare-schedules',
+      '--json', tempOutputFile
     ];
 
     const pythonProcess = spawn(pythonExecutable, [scriptPath, ...scriptArgs]);
@@ -41,13 +47,18 @@ export async function POST(request: Request) {
       stderr += data.toString();
     });
 
-    const executionPromise = new Promise((resolve, reject) => {
-      pythonProcess.on('close', (code) => {
+    const executionPromise = new Promise(async (resolve, reject) => {
+      pythonProcess.on('close', async (code) => {
         if (code === 0) {
           try {
-            const result = JSON.parse(stdout);
-            resolve(result);
-          } catch (e) {
+             // The script writes to a file, so we read it.
+             const resultData = await fs.readFile(tempOutputFile, 'utf-8');
+             await fs.unlink(tempOutputFile); // Clean up the temp file
+             const result = JSON.parse(resultData);
+             resolve(result);
+          } catch (e: any) {
+            console.error(`Failed to parse Python script output file: ${e.message}`);
+            console.error(`stdout from script: ${stdout}`);
             reject(new Error('Failed to parse Python script output.'));
           }
         } else {
