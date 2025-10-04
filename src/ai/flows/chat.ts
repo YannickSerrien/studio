@@ -1,9 +1,9 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
-import {generate} from 'genkit/generate';
+import {generate} from 'genkit';
 import {z} from 'genkit';
-import {Message, Part} from 'genkit/ai';
+import {Message} from 'genkit/ai';
 
 const ChatHistorySchema = z.array(
   z.object({
