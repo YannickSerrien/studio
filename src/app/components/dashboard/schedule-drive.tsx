@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -109,7 +110,9 @@ export function ScheduleDrive() {
                 <MapPin className="h-5 w-5 text-accent" />
                 <p className="text-lg font-bold text-accent-foreground">{suggestedLocation}</p>
             </div>
-             <p className="text-xs text-muted-foreground mt-2">(Your location: {userLocation})</p>
+             {userLocation && (
+              <p className="text-xs text-muted-foreground mt-2">(Your location: {userLocation})</p>
+            )}
           </div>
         )}
       </CardContent>
