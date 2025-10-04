@@ -100,6 +100,7 @@ export const driverStatusData: DriverStatus = {
 };
 
 export type Settings = {
+  name: string;
   currency: string;
   location: string;
 };

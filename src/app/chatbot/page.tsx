@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bot, User, Send, Loader2, LayoutDashboard, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import type { Settings as AppSettings } from '@/app/lib/data';
 
@@ -50,10 +51,19 @@ export default function ChatbotPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
+    name: 'Driver',
     currency: '$',
     location: 'San Francisco, CA',
   });
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const prompt = searchParams.get('prompt');
+    if (prompt) {
+      setMessages([{ role: 'model', content: prompt }]);
+    }
+  }, [searchParams]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

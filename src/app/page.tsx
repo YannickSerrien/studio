@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/app/components/dashboard/header';
 import { WeeklySummary } from '@/app/components/dashboard/weekly-summary';
 import { DailyHighlights } from '@/app/components/dashboard/daily-highlights';
@@ -19,7 +20,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Bot, LayoutDashboard, Settings } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import { DriverStatus } from '@/app/components/dashboard/driver-status';
 
@@ -27,12 +28,24 @@ const BREAK_THRESHOLD_SECONDS = 16200; // 4.5 hours
 
 export default function Home() {
   const [settings, setSettings] = useState<AppSettings>({
+    name: 'Driver',
     currency: '$',
     location: 'San Francisco, CA',
   });
   const [isDriving, setIsDriving] = useState(false);
   const [drivingSeconds, setDrivingSeconds] = useState(0);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (drivingSeconds > BREAK_THRESHOLD_SECONDS) {
+      const queryParams = new URLSearchParams({
+        prompt: `Hey ${settings.name}, you've been driving for a while now. Time for a well-deserved break! Let me know if you'd like some ideas for how to best spend your break time.`
+      }).toString();
+      router.push(`/chatbot?${queryParams}`);
+    }
+  }, [drivingSeconds, router, settings.name]);
+
 
   return (
     <SidebarProvider>
