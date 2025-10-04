@@ -39,7 +39,9 @@ export function DailyHighlights({ currency }: DailyHighlightsProps) {
   const currentWeekData = earningsData[currentWeekIndex];
 
   const handleBarClick = (data: any) => {
-    setSelectedDay(data.payload);
+    if (data.activePayload && data.activePayload.length > 0) {
+      setSelectedDay(data.activePayload[0].payload);
+    }
   };
 
   const goToPreviousWeek = () => {
