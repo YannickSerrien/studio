@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     // Path to the Python executable and script
-    const pythonExecutable = 'python3';
+    const pythonExecutable = '/usr/bin/python3';
     const scriptPath = path.join(process.cwd(), 'src', 'server', 'dp_cli.py');
     const tempOutputFile = path.join(os.tmpdir(), `results-${Date.now()}.json`);
     const dateToday = new Date().toISOString().split('T')[0];
