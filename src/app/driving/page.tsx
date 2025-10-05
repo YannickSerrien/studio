@@ -14,7 +14,7 @@ import {
   SidebarSeparator,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { Bot, LayoutDashboard, Settings, CarFront, Calendar } from 'lucide-react';
+import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
@@ -53,14 +53,6 @@ export default function DrivingPage() {
                 <SidebarMenuButton tooltip="Driving" isActive={pathname === '/driving'}>
                   <CarFront />
                   <span>Driving</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <Link href="/availabilities">
-                <SidebarMenuButton tooltip="Availabilities" isActive={pathname === '/availabilities'}>
-                  <Calendar />
-                  <span>Availabilities</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>

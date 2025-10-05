@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bot, LayoutDashboard, Settings, Calendar, CarFront } from 'lucide-react';
+import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import type { Settings as AppSettings } from '@/app/lib/data';
 import { cn } from '@/lib/utils';
@@ -101,14 +101,6 @@ export default function AvailabilitiesPage() {
                 <SidebarMenuButton tooltip="Driving" isActive={pathname === '/driving'}>
                   <CarFront />
                   <span>Driving</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link href="/availabilities">
-                <SidebarMenuButton tooltip="Availabilities" isActive={pathname === '/availabilities'}>
-                  <Calendar />
-                  <span>Availabilities</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>

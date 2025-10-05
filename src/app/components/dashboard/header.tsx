@@ -27,7 +27,6 @@ export function Header() {
   const navLinks = [
     { href: '/', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { href: '/driving', label: 'Driving', icon: <CarFront className="h-5 w-5" /> },
-    { href: '/availabilities', label: 'Availabilities', icon: <Calendar className="h-5 w-5" /> },
     { href: '/chatbot', label: 'AI Chatbot', icon: <Bot className="h-5 w-5" /> },
   ];
 
