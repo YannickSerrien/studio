@@ -98,9 +98,6 @@ Examples:
     sys.exit(1)
 
   # Initialize optimizer
-  print(
-    f"Initializing optimizer (ε={args.epsilon}, γ={args.gamma}, λ_floor={args.lambda_floor})..."
-  )
   optimizer = MobilityOptimizer(
     epsilon=args.epsilon, gamma=args.gamma, lambda_floor=args.lambda_floor
   )
@@ -116,55 +113,48 @@ Examples:
 
   try:
     if args.cluster:
-        print(f"\n=== CLUSTER ANALYSIS: {args.cluster} ===")
         earnings, path = optimizer.solve_dp(
             args.city, args.cluster, args.hour, args.duration, args.date
         )
-        results["cluster_analysis"] = {
+        results = {
             "cluster": args.cluster, "total_earnings": earnings,
             "hourly_rate": earnings / args.duration, "optimal_path": path
         }
 
     elif args.best_positions:
-        print("\n=== BEST STARTING POSITIONS ===")
         best_positions = analyzer.optimizer.analyze_best_starting_positions(
             args.city, args.hour, args.duration, args.date, args.top_k
         )
-        results["best_positions"] = [
-            {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
-            for i, (cluster, earnings, path) in enumerate(best_positions, 1)
-        ]
-
-    elif args.compare_schedules:
-        print("\n=== SCHEDULE COMPARISON ===")
-        # For schedule comparison, we need a starting cluster.
-        # We'll pick the first available one for the city as a default.
-        default_cluster = next(iter(optimizer.graphs[args.city].nodes()))
-        cluster_arg = args.cluster if args.cluster else default_cluster
-        
-        schedules = [(hour, args.duration) for hour in range(24)] # Check all start hours
-        schedule_results = analyzer.compare_work_schedules(
-            args.city, cluster_arg, args.date, schedules
-        )
-        results["schedule_comparison"] = schedule_results.to_dict("records")
+        results = {
+            "best_positions": [
+                {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
+                for i, (cluster, earnings, path) in enumerate(best_positions, 1)
+            ]
+        }
     
     else:
         # Fallback to best_positions if no specific analysis is chosen
-        print("\n=== DEFAULT ANALYSIS (BEST STARTING POSITIONS) ===")
         best_positions = analyzer.optimizer.analyze_best_starting_positions(
             args.city, args.hour, args.duration, args.date, args.top_k
         )
-        results["best_positions"] = [
-            {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
-            for i, (cluster, earnings, path) in enumerate(best_positions, 1)
-        ]
+        results = {
+           "best_positions": [
+              {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
+              for i, (cluster, earnings, path) in enumerate(best_positions, 1)
+            ]
+        }
 
     # Export to JSON if requested
     if args.json:
-      analyzer.export_results_to_json(city_id=args.city, results=results, filename=args.json)
+      with open(args.json, 'w') as f:
+          json.dump(results, f, indent=4)
+      print(f"✓ Results exported to {args.json}")
+
 
   except Exception as e:
     print(f"Error during analysis: {e}", file=sys.stderr)
+    import traceback
+    traceback.print_exc()
     sys.exit(1)
 
 

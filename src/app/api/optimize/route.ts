@@ -26,6 +26,7 @@ export async function POST(request: Request) {
     const dateToday = new Date().toISOString().split('T')[0];
 
     const scriptArgs = [
+        scriptPath,
         '--city', city.toString(),
         '--date', dateToday,
         '--hour', startHour.toString(),
@@ -35,14 +36,13 @@ export async function POST(request: Request) {
         '--json', tempOutputFile,
     ];
     
-    // Execute the script directly
-    const pythonProcess = spawn(scriptPath, scriptArgs, {
+    const pythonProcess = spawn('python3', scriptArgs, {
         cwd: path.join(process.cwd(), 'src', 'server'),
         env: {
           ...process.env,
           PYTHONPATH: path.join(process.cwd(), 'src', 'server'),
         },
-        shell: false, // Important: shell: false is more secure and predictable
+        shell: false,
     });
 
     let stdout = '';
@@ -64,8 +64,8 @@ export async function POST(request: Request) {
              await fs.unlink(tempOutputFile); 
              const result = JSON.parse(resultData);
              
-             if (result.analysis?.best_positions && result.analysis.best_positions.length > 0) {
-                const bestPosition = result.analysis.best_positions[0];
+             if (result.best_positions && result.best_positions.length > 0) {
+                const bestPosition = result.best_positions[0];
                 const transformedResult = {
                     total_earnings: bestPosition.earnings,
                     hourly_rate: bestPosition.earnings / duration,
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
             reject(new Error(`Failed to parse script output. Stdout: ${stdout} Stderr: ${stderr}`));
           }
         } else {
-            const errorMessage = `Python script exited with code ${code}. Stderr: ${stderr || 'N/A'}. Stdout: ${stdout || 'N/A'}`;
+            const errorMessage = `Python script exited with code ${code}: ${stderr || stdout}`;
             console.error(errorMessage);
             reject(new Error(errorMessage));
         }
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
 
   } catch (error: any) {
-    console.error('API Error:', error.message);
+    console.error('API Error:', error);
     return NextResponse.json({ error: error.message || 'An internal server error occurred.' }, { status: 500 });
   }
 }
