@@ -26,17 +26,14 @@ app = FastAPI(
   lifespan=lifespan,
 )
 
+# Set up CORS middleware to allow requests from the Next.js frontend
+# This is crucial for cross-origin communication between Next.js and FastAPI
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=[
-    "http://localhost:8081",
-    "exp://6ka3zyi-anonymous-8081.exp.direct",
-    "http://6ka3zyi-anonymous-8081.exp.direct",
-    "*",
-  ],
+  allow_origins=["*"],  # Allow all origins for simplicity, can be restricted
   allow_credentials=True,
-  allow_methods=["*"],
-  allow_headers=["*"],
+  allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
+  allow_headers=["*"],  # Allow all headers
 )
 
 app.include_router(router, prefix="/api/v1")
@@ -46,5 +43,3 @@ app.include_router(router, prefix="/api/v1")
 async def health_check() -> dict[str, str]:
   """Health check endpoint."""
   return {"status": "healthy"}
-
-    

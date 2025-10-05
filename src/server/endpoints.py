@@ -1,3 +1,4 @@
+
 """API endpoints for driver optimization and real-time data."""
 
 from typing import Any
@@ -27,9 +28,60 @@ from app.schemas.output import (
   ZoneScoresResponse,
 )
 from app.service import DataService
+from app.dynamic_programming_optimizer import MobilityOptimizer
+
 
 router = APIRouter()
 data_service = DataService()
+
+
+@router.get("/optimize", summary="Run DP Optimization", tags=["optimization"])
+async def run_optimization(
+    city_id: int = Query(..., description="City ID (1-5)", ge=1, le=5),
+    start_hour: int = Query(..., description="Starting hour (0-23)", ge=0, le=23),
+    duration: int = Query(..., description="Work duration in hours (1-24)", ge=1, le=24),
+):
+    """
+    Finds the best starting cluster for a given time slot.
+    """
+    try:
+        # Initialize the optimizer. This is a singleton, so it's efficient.
+        optimizer = MobilityOptimizer()
+
+        # We want the single best starting position for the given slot.
+        # The date is used for weather prediction.
+        today = datetime.now()
+        best_positions = optimizer.analyze_best_starting_positions(
+            city_id=city_id,
+            start_hour=start_hour,
+            work_hours=duration,
+            start_date=today,
+            top_k=1,
+        )
+
+        if not best_positions:
+            raise HTTPException(
+                status_code=404,
+                detail="Could not find an optimal starting position for the given parameters.",
+            )
+
+        # Extract the single best result
+        best_cluster, earnings, path = best_positions[0]
+
+        # Format the response to match what the frontend expects
+        result = {
+            "total_earnings": earnings,
+            "hourly_rate": earnings / duration if duration > 0 else 0,
+            "optimal_path": path,
+        }
+        return result
+
+    except Exception as e:
+        print(f"Error during optimization: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred during optimization: {str(e)}",
+        )
 
 
 @router.post(
@@ -608,7 +660,7 @@ async def select_time(driver_id: str, request: TimeSelectionRequest) -> dict[str
     HTTPException: 400 if invalid time or no preferences set, 500 if storage fails
 
   """
-  try:
+  try
     result = await data_service.select_time(driver_id, request.time)
     return {"status": "success", "data": result}
   except ValueError as e:
@@ -918,5 +970,3 @@ async def get_wellness_reminder(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get wellness reminder: {str(e)}"
         ) from e
-
-    
