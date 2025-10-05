@@ -5,19 +5,16 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import os from 'os';
 
-async function writeJsonOutput(data: any) {
-  const tempDir = os.tmpdir();
-  const tempFile = path.join(tempDir, `optimizer-results-${Date.now()}.json`);
-  await fs.writeFile(tempFile, JSON.stringify(data, null, 2));
-  return tempFile;
-}
-
 export async function POST(request: Request) {
   try {
-    const { city } = await request.json();
+    const { city, duration } = await request.json();
 
     if (!city || typeof city !== 'string' || !['1', '2', '3', '4', '5'].includes(city)) {
       return NextResponse.json({ error: 'Invalid "city" parameter. Must be a string from "1" to "5".' }, { status: 400 });
+    }
+    
+    if (!duration || typeof duration !== 'number' || duration < 2 || duration > 12) {
+      return NextResponse.json({ error: 'Invalid "duration" parameter. Must be a number between 2 and 12.' }, { status: 400 });
     }
 
     // Path to the Python executable and script
@@ -28,13 +25,15 @@ export async function POST(request: Request) {
 
     // Arguments for the script
     const scriptArgs = [
+      scriptPath,
       '--city', city,
       '--date', dateToday,
+      '--duration', duration.toString(),
       '--compare-schedules',
       '--json', tempOutputFile
     ];
 
-    const pythonProcess = spawn(pythonExecutable, [scriptPath, ...scriptArgs]);
+    const pythonProcess = spawn(pythonExecutable, scriptArgs);
 
     let stdout = '';
     let stderr = '';

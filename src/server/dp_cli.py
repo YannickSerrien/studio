@@ -15,8 +15,8 @@ import sys
 
 from datetime import datetime, timedelta
 
-from advanced_analysis import AdvancedAnalyzer
-from dynamic_programming_optimizer import MobilityOptimizer
+from .advanced_analysis import AdvancedAnalyzer
+from .dynamic_programming_optimizer import MobilityOptimizer
 
 
 def parse_date(date_str: str) -> datetime:
@@ -125,13 +125,15 @@ Examples:
       print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours")
       print("-" * 50)
 
-      earnings, path = optimizer.solve_dp(
+      earnings, path, lat, lon = optimizer.solve_dp(
         args.city, args.cluster, args.hour, args.duration, args.date
       )
 
       print(f"Expected total earnings: €{earnings:.2f}")
       print(f"Expected hourly rate: €{earnings / args.duration:.2f}/hour")
       print(f"Optimal path: {' -> '.join(path)}")
+      print(f"Coordinates: Lat={lat}, Lon={lon}")
+
 
       if args.verbose:
         print("\n=== DETAILED PATH TIMING ANALYSIS ===")
@@ -188,6 +190,8 @@ Examples:
         "total_earnings": earnings,
         "hourly_rate": earnings / args.duration,
         "optimal_path": path,
+        "lat": lat,
+        "lon": lon,
       }
 
     elif args.best_positions:
@@ -196,46 +200,32 @@ Examples:
       print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours")
       print("-" * 50)
 
-      best_positions = analyzer.optimizer.analyze_best_starting_positions(
+      best_positions = optimizer.analyze_best_starting_positions(
         args.city, args.hour, args.duration, args.date, args.top_k
       )
 
-      for i, (cluster, earnings, path) in enumerate(best_positions, 1):
-        print(f"{i:2d}. {cluster}: €{earnings:.2f} (€{earnings / args.duration:.2f}/h)")
+      for i, (cluster, earnings, path, lat, lon) in enumerate(best_positions, 1):
+        print(f"{i:2d}. {cluster}: €{earnings:.2f} (€{earnings / args.duration:.2f}/h) at ({lat:.4f}, {lon:.4f})")
         if args.verbose:
           print(f"    Path: {' -> '.join(path)}")
 
       results["best_positions"] = [
-        {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
-        for i, (cluster, earnings, path) in enumerate(best_positions, 1)
+        {"rank": i, "cluster": cluster, "earnings": earnings, "path": path, "lat": lat, "lon": lon}
+        for i, (cluster, earnings, path, lat, lon) in enumerate(best_positions, 1)
       ]
 
     elif args.compare_schedules:
-      if not hasattr(args, "cluster") or not args.cluster:
-        # Need cluster for schedule comparison
-        cluster_arg = input("Enter starting cluster (e.g., c_3_2): ").strip()
-        if not cluster_arg:
-          print("Error: Cluster required for schedule comparison")
-          sys.exit(1)
-      else:
-        cluster_arg = args.cluster
-
+      # Use a default cluster if none is provided, as it's not critical for this analysis type
+      # We pick the first available cluster for the city.
+      cluster_arg = next(iter(optimizer.graphs[args.city].nodes()))
+      
       print("\n=== SCHEDULE COMPARISON ===")
-      print(f"City: {args.city}, Cluster: {cluster_arg}, Date: {args.date.date()}")
+      print(f"City: {args.city}, Date: {args.date.date()}")
+      print(f"Analyzing for a {args.duration}-hour shift...")
       print("-" * 70)
 
-      schedules = [
-        (6, 8),
-        (8, 8),
-        (10, 8),
-        (14, 8),
-        (18, 8),
-        (22, 8),
-        (8, 4),
-        (8, 6),
-        (8, 10),
-        (8, 12),
-      ]
+      # Test all 24 hours as potential start times for the given duration
+      schedules = [(hour, args.duration) for hour in range(24)]
 
       schedule_results = analyzer.compare_work_schedules(
         args.city, cluster_arg, args.date, schedules
@@ -294,11 +284,9 @@ Examples:
       analyzer.export_results_to_json(args.city, results, args.json)
 
   except Exception as e:
-    print(f"Error during analysis: {e}")
+    print(f"Error during analysis: {e}", file=sys.stderr)
     sys.exit(1)
 
 
 if __name__ == "__main__":
   main()
-
-    

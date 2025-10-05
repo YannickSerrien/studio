@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Clock, Search, Loader2, AlertTriangle } from 'lucide-react';
 import type { Settings } from '@/app/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 
 type ScheduleDriveProps = {
   city: Settings['city'];
@@ -24,6 +26,7 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [bestSchedule, setBestSchedule] = useState<ScheduleResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [duration, setDuration] = useState(8);
 
   const handleFindBestTime = async () => {
     setIsLoading(true);
@@ -36,7 +39,7 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ city }),
+        body: JSON.stringify({ city, duration }),
       });
 
       if (!response.ok) {
@@ -67,10 +70,26 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
       <CardHeader>
         <CardTitle>Find the Best Time to Drive</CardTitle>
         <CardDescription>
-          We'll analyze demand patterns to suggest the most profitable time to start your shift.
+          Select your planned shift duration, and we'll find the most profitable time to start.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="duration-slider">Shift Duration</Label>
+            <span className="font-bold text-lg text-accent">{duration} hours</span>
+          </div>
+          <Slider
+            id="duration-slider"
+            min={2}
+            max={12}
+            step={1}
+            value={[duration]}
+            onValueChange={(value) => setDuration(value[0])}
+            disabled={isLoading}
+          />
+        </div>
+
         <Button onClick={handleFindBestTime} disabled={isLoading} className="w-full">
           {isLoading ? (
             <>
@@ -95,7 +114,7 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
 
         {bestSchedule && (
           <div className="rounded-lg border border-accent/50 bg-accent/10 p-4 text-center animate-in fade-in-0">
-            <p className="text-sm text-muted-foreground">For maximum earnings, the best time to start an {bestSchedule.duration}-hour shift is:</p>
+            <p className="text-sm text-muted-foreground">For a <span className="font-bold">{bestSchedule.duration}</span>-hour shift, the best time to start is:</p>
             <div className="flex items-center justify-center gap-2 mt-2">
                 <Clock className="h-5 w-5 text-accent" />
                 <p className="text-lg font-bold text-accent-foreground">
