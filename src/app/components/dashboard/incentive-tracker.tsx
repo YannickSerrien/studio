@@ -7,28 +7,42 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { incentiveData } from '@/app/lib/data';
+import { convertAndRound } from '@/lib/utils';
+import { type Settings } from '@/app/lib/data';
 
-const HighlightedDescription = ({ text }: { text: string }) => {
-  const bonusRegex = /(\$\d+(\.\d{1,2})?\s*bonus)/i;
-  const parts = text.split(bonusRegex);
 
-  return (
-    <CardDescription>
-      {parts.map((part, index) => {
-        if (bonusRegex.test(part)) {
-          return (
-            <span key={index} className="font-bold text-accent">
-              {part}
-            </span>
-          );
-        }
-        return part;
-      })}
-    </CardDescription>
-  );
+type IncentiveTrackerProps = {
+  currency: Settings['currency'];
 };
 
-export function IncentiveTracker() {
+
+const HighlightedDescription = ({ text, currency }: { text: string, currency: Settings['currency'] }) => {
+    const bonusAmount = 100; // Base bonus in USD
+    const convertedBonus = convertAndRound(bonusAmount, currency);
+    const bonusText = `${currency}${convertedBonus}`;
+  
+    const textWithConvertedBonus = text.replace(/\$\d+(\.\d{1,2})?/, bonusText);
+
+    const bonusRegex = new RegExp(`(${currency}\\d+(\\.\\d{1,2})?)`);
+    const parts = textWithConvertedBonus.split(bonusRegex);
+  
+    return (
+      <CardDescription>
+        {parts.map((part, index) => {
+          if (bonusRegex.test(part)) {
+            return (
+              <span key={index} className="font-bold text-accent">
+                {part}
+              </span>
+            );
+          }
+          return part;
+        })}
+      </CardDescription>
+    );
+  };
+
+export function IncentiveTracker({ currency }: IncentiveTrackerProps) {
   const { title, description, current, goal, unit, daysLeft } = incentiveData;
   const progressPercentage = (current / goal) * 100;
   const tripsLeft = goal - current;
@@ -43,7 +57,7 @@ export function IncentiveTracker() {
         <div className="flex items-start justify-between">
           <div>
             <CardTitle>{title}</CardTitle>
-            <HighlightedDescription text={description} />
+            <HighlightedDescription text={description} currency={currency} />
           </div>
           <Target className="h-8 w-8 text-accent" />
         </div>

@@ -75,7 +75,7 @@ export default function Home() {
           <Header />
           <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 bg-muted/20">
             <div className="mx-auto max-w-7xl">
-              <IncentiveTracker />
+              <IncentiveTracker currency={settings.currency} />
             </div>
             <div className="mx-auto max-w-7xl">
               <WeeklySummary currency={settings.currency} />

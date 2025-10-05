@@ -8,7 +8,7 @@ import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/u
 import { earningsData, type DailyMetric } from '@/app/lib/data';
 import { ChevronLeft, ChevronRight, Wallet, Car, Clock, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, convertAndRound } from '@/lib/utils';
 import type { Settings } from '@/app/lib/data';
 
 const chartConfig = {
@@ -34,25 +34,36 @@ const MetricItem = ({ icon, label, value }: { icon: React.ReactNode; label: stri
 
 export function DailyHighlights({ currency }: DailyHighlightsProps) {
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
-  const [selectedDay, setSelectedDay] = useState<DailyMetric | null>(earningsData[0].dailyMetrics[0]);
-
+  
   const currentWeekData = earningsData[currentWeekIndex];
+  const convertedDailyMetrics = currentWeekData.dailyMetrics.map(metric => ({
+    ...metric,
+    earnings: convertAndRound(metric.earnings, currency),
+  }));
+
+  const [selectedDay, setSelectedDay] = useState<DailyMetric | null>(currentWeekData.dailyMetrics[0]);
 
   const handleBarClick = (data: any) => {
     if (data.activePayload && data.activePayload.length > 0) {
-      setSelectedDay(data.activePayload[0].payload);
+        const originalDay = earningsData[currentWeekIndex].dailyMetrics.find(d => d.date === data.activePayload[0].payload.date);
+        setSelectedDay(originalDay || null);
     }
   };
 
   const goToPreviousWeek = () => {
-    setCurrentWeekIndex((prev) => Math.min(prev + 1, earningsData.length - 1));
-    setSelectedDay(earningsData[Math.min(currentWeekIndex + 1, earningsData.length - 1)].dailyMetrics[0]);
+    const newIndex = Math.min(currentWeekIndex + 1, earningsData.length - 1);
+    setCurrentWeekIndex(newIndex);
+    setSelectedDay(earningsData[newIndex].dailyMetrics[0]);
   };
 
   const goToNextWeek = () => {
-    setCurrentWeekIndex((prev) => Math.max(prev - 1, 0));
-     setSelectedDay(earningsData[Math.max(currentWeekIndex - 1, 0)].dailyMetrics[0]);
+    const newIndex = Math.max(currentWeekIndex - 1, 0);
+    setCurrentWeekIndex(newIndex);
+     setSelectedDay(earningsData[newIndex].dailyMetrics[0]);
   };
+
+  const totalEarningsConverted = currentWeekData.dailyMetrics.reduce((acc, day) => acc + day.earnings, 0);
+
 
   return (
     <Card>
@@ -62,7 +73,7 @@ export function DailyHighlights({ currency }: DailyHighlightsProps) {
             <CardDescription>{currentWeekData.weekOf}</CardDescription>
             <CardTitle className="text-3xl font-bold tracking-tight">
               {currency}
-              {currentWeekData.totalEarnings.toFixed(2)}
+              {convertAndRound(totalEarningsConverted, currency)}
             </CardTitle>
           </div>
           <div className="flex items-center gap-2">
@@ -80,13 +91,13 @@ export function DailyHighlights({ currency }: DailyHighlightsProps) {
       <CardContent className="space-y-6">
         <ChartContainer config={chartConfig} className="h-[200px] w-full">
           <ResponsiveContainer>
-            <BarChart data={currentWeekData.dailyMetrics} margin={{ top: 5, right: 10, left: -10, bottom: 0 }} onClick={handleBarClick}>
+            <BarChart data={convertedDailyMetrics} margin={{ top: 5, right: 10, left: -10, bottom: 0 }} onClick={handleBarClick}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => value.slice(0, 3)} />
               <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `${currency}${value}`} />
               <Tooltip cursor={{ fill: 'hsl(var(--muted))', radius: 4 }} content={<ChartTooltipContent indicator="dot" />} />
               <Bar dataKey="earnings" radius={[4, 4, 0, 0]}>
-                {currentWeekData.dailyMetrics.map((entry) => (
+                {convertedDailyMetrics.map((entry) => (
                   <Cell
                     key={`cell-${entry.date}`}
                     fill={selectedDay?.date === entry.date ? 'hsl(var(--accent))' : 'hsl(var(--secondary))'}
@@ -104,10 +115,10 @@ export function DailyHighlights({ currency }: DailyHighlightsProps) {
               Metrics for {selectedDay.day}, {selectedDay.date}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <MetricItem icon={<Wallet className="h-5 w-5" />} label="Earnings" value={`${currency}${selectedDay.earnings.toFixed(2)}`} />
+              <MetricItem icon={<Wallet className="h-5 w-5" />} label="Earnings" value={`${currency}${convertAndRound(selectedDay.earnings, currency)}`} />
               <MetricItem icon={<Car className="h-5 w-5" />} label="Trips" value={selectedDay.trips} />
               <MetricItem icon={<Clock className="h-5 w-5" />} label="Online Time" value={`${selectedDay.onlineHours} hrs`} />
-              <MetricItem icon={<Gift className="h-5 w-5" />} label="Tips" value={`${currency}${selectedDay.tips.toFixed(2)}`} />
+              <MetricItem icon={<Gift className="h-5 w-5" />} label="Tips" value={`${currency}${convertAndRound(selectedDay.tips, currency)}`} />
             </div>
           </div>
         )}

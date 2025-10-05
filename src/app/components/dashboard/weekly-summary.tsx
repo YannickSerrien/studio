@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { weeklySummaryData, type Settings } from '@/app/lib/data';
+import { convertAndRound } from '@/lib/utils';
 
 const SummaryItem: FC<{ icon: React.ReactNode; label: string; value: string }> =
   ({ icon, label, value }) => (
@@ -36,7 +37,7 @@ export function WeeklySummary({ currency }: WeeklySummaryProps) {
     {
       icon: <Wallet className="h-5 w-5 text-accent" />,
       label: 'Earnings',
-      value: `${currency}${earnings.toFixed(2)}`,
+      value: `${currency}${convertAndRound(earnings, currency)}`,
     },
     {
       icon: <Car className="h-5 w-5 text-accent" />,
@@ -46,7 +47,7 @@ export function WeeklySummary({ currency }: WeeklySummaryProps) {
     {
       icon: <Gift className="h-5 w-5 text-accent" />,
       label: 'Tips',
-      value: `${currency}${tips.toFixed(2)}`,
+      value: `${currency}${convertAndRound(tips, currency)}`,
     },
     {
       icon: <Route className="h-5 w-5 text-accent" />,
