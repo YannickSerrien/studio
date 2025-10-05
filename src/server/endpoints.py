@@ -1,4 +1,5 @@
 
+
 """API endpoints for driver optimization and real-time data."""
 
 from typing import Any
@@ -34,13 +35,13 @@ from app.dynamic_programming_optimizer import MobilityOptimizer
 router = APIRouter()
 data_service = DataService()
 
+class OptimizationRequest(BaseModel):
+    city_id: int
+    start_hour: int
+    duration: int
 
-@router.get("/optimize/best_start_cluster", summary="Find Best Starting Cluster for a Shift", tags=["optimization"])
-async def find_best_start_cluster(
-    city_id: int = Query(..., description="City ID (1-5)", ge=1, le=5),
-    start_hour: int = Query(..., description="Starting hour of the shift (0-23)", ge=0, le=23),
-    duration: int = Query(..., description="Work duration in hours (1-24)", ge=1, le=24),
-):
+@router.post("/optimize/best_start_cluster", summary="Find Best Starting Cluster for a Shift", tags=["optimization"])
+async def find_best_start_cluster(request: OptimizationRequest):
     """
     Finds the single best starting cluster (location) for a given shift start time and duration.
     """
@@ -51,9 +52,9 @@ async def find_best_start_cluster(
         # analyze_best_starting_positions will check all clusters for the given time
         # and return the top one.
         best_positions = optimizer.analyze_best_starting_positions(
-            city_id=city_id,
-            start_hour=start_hour,
-            work_hours=duration,
+            city_id=request.city_id,
+            start_hour=request.start_hour,
+            work_hours=request.duration,
             start_date=today,
             top_k=1,
         )
@@ -69,7 +70,7 @@ async def find_best_start_cluster(
 
         result = {
             "total_earnings": earnings,
-            "hourly_rate": earnings / duration if duration > 0 else 0,
+            "hourly_rate": earnings / request.duration if request.duration > 0 else 0,
             "optimal_path": path, # The first element is the best starting cluster
         }
         return result

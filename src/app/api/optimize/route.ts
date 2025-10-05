@@ -7,33 +7,41 @@ export async function POST(request: NextRequest) {
   try {
     const { city, startHour, duration } = await request.json();
 
+    // Basic validation
     if (!city || typeof city !== 'string' || !['1', '2', '3', '4', '5'].includes(city)) {
       return NextResponse.json({ error: 'Invalid "city" parameter.' }, { status: 400 });
     }
-    
     if (startHour === undefined || typeof startHour !== 'number' || startHour < 0 || startHour > 23) {
       return NextResponse.json({ error: 'Invalid "startHour" parameter.' }, { status: 400 });
     }
-    
     if (duration === undefined || typeof duration !== 'number' || duration <= 0) {
       return NextResponse.json({ error: 'Invalid "duration" parameter.' }, { status: 400 });
     }
     
-    const pythonApiUrl = `http://127.0.0.1:8000/api/v1/optimize/best_start_cluster?city_id=${city}&start_hour=${startHour}&duration=${duration}`;
+    // The Python API endpoint URL
+    const pythonApiUrl = `http://127.0.0.1:8000/api/v1/optimize/best_start_cluster`;
 
+    // Make a POST request to the Python backend
     const response = await fetch(pythonApiUrl, {
-        method: 'GET',
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+            city_id: parseInt(city, 10),
+            start_hour: startHour,
+            duration: duration,
+        }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
+      // Forward the error from the Python server
       throw new Error(data.detail || 'The optimization algorithm failed on the Python server.');
     }
 
+    // Return the successful response from the Python server
     return NextResponse.json(data);
 
   } catch (error: any) {
