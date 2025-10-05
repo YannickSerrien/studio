@@ -64,7 +64,7 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
       });
 
       if (!response.ok) {
-        throw new Error(`Analysis for ${startHour}:00 failed.`);
+        throw new Error(`Analysis failed. Please try again.`);
       }
       
       const result = await response.json();
@@ -118,7 +118,6 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
 
         {error && (
             <div className="text-center text-sm text-destructive pt-4">
-                <p>Analysis Failed</p>
                 <p>{error}</p>
             </div>
         )}
