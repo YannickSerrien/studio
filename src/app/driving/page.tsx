@@ -15,7 +15,7 @@ import {
   SidebarSeparator,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { Bot, LayoutDashboard, Settings, Calendar, CarFront } from 'lucide-react';
+import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
@@ -58,14 +58,6 @@ export default function DrivingPage() {
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/availabilities">
-                <SidebarMenuButton tooltip="Availabilities" isActive={pathname === '/availabilities'}>
-                  <Calendar />
-                  <span>Availabilities</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
               <Link href="/chatbot">
                 <SidebarMenuButton tooltip="AI Chatbot" isActive={pathname === '/chatbot'}>
                   <Bot />
@@ -93,7 +85,7 @@ export default function DrivingPage() {
               <DriverStatus />
             </div>
             <div className="mx-auto max-w-7xl">
-              <ScheduleDrive city={settings.city} />
+              <ScheduleDrive city={settings.city} currency={settings.currency} />
             </div>
           </main>
           <WellnessNudge />

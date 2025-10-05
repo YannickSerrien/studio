@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Search, Loader2, AlertTriangle } from 'lucide-react';
+import { Search, Loader2, AlertTriangle, Wallet } from 'lucide-react';
 import type { Settings } from '@/app/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Slider } from '@/components/ui/slider';
@@ -12,34 +12,67 @@ import { Label } from '@/components/ui/label';
 
 type ScheduleDriveProps = {
   city: Settings['city'];
+  currency: Settings['currency'];
 };
 
-type ScheduleResult = {
-  start_hour: string;
-  duration: number;
+type ForecastResult = {
   total_earnings: number;
   hourly_rate: number;
-  path_preview: string;
+  optimal_path: string[];
 }
 
-export function ScheduleDrive({ city }: ScheduleDriveProps) {
+export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [bestSchedule, setBestSchedule] = useState<ScheduleResult | null>(null);
+  const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [duration, setDuration] = useState(8);
+  
+  // Representing the next 24 hours in 15-minute intervals.
+  // Slider value will be an index from 0 to 95.
+  const [timeRange, setTimeRange] = useState([12, 48]); // Default: 3 hours from now to 12 hours from now
 
-  const handleFindBestTime = async () => {
+  const { timeLabels, sliderMin, sliderMax } = useMemo(() => {
+    const now = new Date();
+    const labels = [];
+    for (let i = 0; i < 24 * 4; i++) { // 24 hours, 4 intervals per hour
+      const date = new Date(now.getTime() + i * 15 * 60 * 1000);
+      labels.push(date);
+    }
+    return { timeLabels: labels, sliderMin: 0, sliderMax: labels.length -1 };
+  }, []);
+  
+  const formatTime = (sliderValue: number) => {
+    const date = timeLabels[sliderValue];
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+
+  const selectedStartTime = timeLabels[timeRange[0]];
+  const selectedEndTime = timeLabels[timeRange[1]];
+  
+  const durationInHours = useMemo(() => {
+    return (timeRange[1] - timeRange[0]) / 4;
+  }, [timeRange]);
+
+
+  const handleForecast = async () => {
     setIsLoading(true);
-    setBestSchedule(null);
+    setForecast(null);
     setError(null);
+    
+    if (durationInHours <= 0) {
+        setError("Please select a valid time range with a duration greater than zero.");
+        setIsLoading(false);
+        return;
+    }
 
     try {
+      const startHour = selectedStartTime.getHours();
+      
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ city, duration }),
+        body: JSON.stringify({ city, startHour, duration: Math.round(durationInHours) }),
       });
 
       if (!response.ok) {
@@ -48,15 +81,12 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
       }
 
       const data = await response.json();
-      const schedules = data?.analysis?.schedule_comparison;
+      const result = data?.cluster_analysis;
 
-      if (!schedules || !Array.isArray(schedules) || schedules.length === 0) {
-        throw new Error('No valid schedules were returned from the analysis.');
+      if (!result) {
+        throw new Error('No valid forecast was returned from the analysis.');
       }
-      
-      // Find the schedule with the highest hourly rate
-      const best = schedules.reduce((prev, current) => (prev.hourly_rate > current.hourly_rate) ? prev : current);
-      setBestSchedule(best);
+      setForecast(result);
 
     } catch (e: any) {
       setError(e.message || 'An unexpected error occurred.');
@@ -68,38 +98,49 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Find the Best Time to Drive</CardTitle>
+        <CardTitle>Earnings Forecaster</CardTitle>
         <CardDescription>
-          Select your planned shift duration, and we'll find the most profitable time to start.
+          Select a time window to forecast your potential earnings for that period.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <Label htmlFor="duration-slider">Shift Duration</Label>
-            <span className="font-bold text-lg text-accent">{duration} hours</span>
+          <div className="flex justify-between items-center font-mono text-lg">
+             <div>
+                <Label className="font-sans text-xs text-muted-foreground">Start Time</Label>
+                <p>{formatTime(timeRange[0])}</p>
+             </div>
+             <div>
+                <Label className="font-sans text-xs text-muted-foreground">End Time</Label>
+                <p>{formatTime(timeRange[1])}</p>
+             </div>
           </div>
           <Slider
-            id="duration-slider"
-            min={2}
-            max={12}
+            id="time-range-slider"
+            min={sliderMin}
+            max={sliderMax}
             step={1}
-            value={[duration]}
-            onValueChange={(value) => setDuration(value[0])}
+            value={timeRange}
+            onValueChange={setTimeRange}
             disabled={isLoading}
+            className="w-full"
           />
+           <div className="text-center">
+              <Label className="text-xs text-muted-foreground">Selected Duration</Label>
+              <p className="font-bold text-accent">{durationInHours.toFixed(2)} hours</p>
+           </div>
         </div>
 
-        <Button onClick={handleFindBestTime} disabled={isLoading} className="w-full">
+        <Button onClick={handleForecast} disabled={isLoading} className="w-full">
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing Schedules...
+              Calculating Forecast...
             </>
           ) : (
             <>
               <Search className="mr-2 h-4 w-4" />
-              Find Best Time to Start
+              Forecast Earnings
             </>
           )}
         </Button>
@@ -112,18 +153,25 @@ export function ScheduleDrive({ city }: ScheduleDriveProps) {
             </Alert>
         )}
 
-        {bestSchedule && (
+        {forecast && (
           <div className="rounded-lg border border-accent/50 bg-accent/10 p-4 text-center animate-in fade-in-0">
-            <p className="text-sm text-muted-foreground">For a <span className="font-bold">{bestSchedule.duration}</span>-hour shift, the best time to start is:</p>
+            <p className="text-sm text-muted-foreground">
+                Forecast for {formatTime(timeRange[0])} - {formatTime(timeRange[1])}
+            </p>
             <div className="flex items-center justify-center gap-2 mt-2">
-                <Clock className="h-5 w-5 text-accent" />
-                <p className="text-lg font-bold text-accent-foreground">
-                  Around {bestSchedule.start_hour}
+                <Wallet className="h-6 w-6 text-accent" />
+                <p className="text-2xl font-bold text-accent-foreground">
+                  {currency}{forecast.total_earnings.toFixed(2)}
                 </p>
             </div>
-             <p className="text-xs text-muted-foreground mt-2">
-                (Expected hourly rate: €{bestSchedule.hourly_rate.toFixed(2)}/hr)
+             <p className="text-xs text-muted-foreground mt-1">
+                (Hourly average: {currency}{forecast.hourly_rate.toFixed(2)}/hr)
             </p>
+            {forecast.optimal_path && (
+                 <p className="text-xs text-muted-foreground mt-2">
+                    Optimal starting area: <span className="font-semibold">{forecast.optimal_path[0]}</span>
+                </p>
+            )}
           </div>
         )}
       </CardContent>

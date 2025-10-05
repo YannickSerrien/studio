@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Command-line interface for the Dynamic Programming Optimizer
 
@@ -12,11 +13,11 @@ Usage examples:
 
 import argparse
 import sys
-
+import json
 from datetime import datetime, timedelta
 
-from .advanced_analysis import AdvancedAnalyzer
-from .dynamic_programming_optimizer import MobilityOptimizer
+from advanced_analysis import AdvancedAnalyzer
+from dynamic_programming_optimizer import MobilityOptimizer
 
 
 def parse_date(date_str: str) -> datetime:
@@ -53,19 +54,19 @@ Examples:
     "--date", type=parse_date, required=True, help="Start date in YYYY-MM-DD format"
   )
 
-  # Analysis type (mutually exclusive)
-  analysis_group = parser.add_mutually_exclusive_group(required=True)
-  analysis_group.add_argument(
+  # Analysis type
+  # Mutually exclusive group is no longer required as we can combine them.
+  parser.add_argument(
     "--cluster", type=str, help="Analyze specific starting cluster (e.g., c_3_2)"
   )
-  analysis_group.add_argument(
+  parser.add_argument(
     "--best-positions", action="store_true", help="Find best starting positions"
   )
-  analysis_group.add_argument(
+  parser.add_argument(
     "--compare-schedules", action="store_true", help="Compare different work schedules"
   )
-  analysis_group.add_argument("--weekly", action="store_true", help="Weekly earnings analysis")
-  analysis_group.add_argument(
+  parser.add_argument("--weekly", action="store_true", help="Weekly earnings analysis")
+  parser.add_argument(
     "--cluster-popularity", action="store_true", help="Analyze cluster popularity"
   )
 
@@ -93,11 +94,11 @@ Examples:
 
   # Validate arguments
   if args.hour < 0 or args.hour > 23:
-    print("Error: Hour must be between 0 and 23")
+    print("Error: Hour must be between 0 and 23", file=sys.stderr)
     sys.exit(1)
 
   if args.duration < 1 or args.duration > 24:
-    print("Error: Duration must be between 1 and 24 hours")
+    print("Error: Duration must be between 1 and 24 hours", file=sys.stderr)
     sys.exit(1)
 
   # Initialize optimizer
@@ -112,7 +113,7 @@ Examples:
 
   # Check if city exists
   if args.city not in optimizer.graphs:
-    print(f"Error: City {args.city} not found. Available cities: {list(optimizer.graphs.keys())}")
+    print(f"Error: City {args.city} not found. Available cities: {list(optimizer.graphs.keys())}", file=sys.stderr)
     sys.exit(1)
 
   results = {}
@@ -125,73 +126,19 @@ Examples:
       print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours")
       print("-" * 50)
 
-      earnings, path, lat, lon = optimizer.solve_dp(
+      earnings, path = optimizer.solve_dp(
         args.city, args.cluster, args.hour, args.duration, args.date
       )
 
       print(f"Expected total earnings: €{earnings:.2f}")
       print(f"Expected hourly rate: €{earnings / args.duration:.2f}/hour")
       print(f"Optimal path: {' -> '.join(path)}")
-      print(f"Coordinates: Lat={lat}, Lon={lon}")
-
-
-      if args.verbose:
-        print("\n=== DETAILED PATH TIMING ANALYSIS ===")
-        timing_analysis = optimizer.analyze_path_timing(args.city, path, args.hour, args.date)
-
-        if timing_analysis:
-          print(
-            f"{'Step':<4} {'From':<8} {'To':<8} {'Hour':<5} {'Fare':<8} {'Travel':<7} {'Wait':<6} {'Total':<7} {'Cum.Time':<8} {'Cum.€':<8} {'Rate':<8}"
-          )
-          print("-" * 80)
-
-          for step_info in timing_analysis:
-            print(
-              f"{step_info['step']:<4} "
-              f"{step_info['from_cluster']:<8} "
-              f"{step_info['to_cluster']:<8} "
-              f"{int(step_info['hour']):02d}:00{'':<1} "
-              f"€{step_info['final_fare']:.2f}{'':<3} "
-              f"{step_info['travel_time_minutes']:.1f}min{'':<1} "
-              f"{step_info['wait_time_minutes']:.1f}m{'':<2} "
-              f"{step_info['total_step_time']:.1f}min{'':<1} "
-              f"{step_info['cumulative_hours']:.1f}h{'':<4} "
-              f"€{step_info['cumulative_earnings']:.2f}{'':<3} "
-              f"€{step_info['current_hourly_rate']:.1f}/h"
-            )
-
-          total_time_hours = timing_analysis[-1]["cumulative_hours"]
-          total_earnings = timing_analysis[-1]["cumulative_earnings"]
-          print(
-            f"\nSummary: €{total_earnings:.2f} earned in {total_time_hours:.1f} hours (€{total_earnings / total_time_hours:.2f}/hour)"
-          )
-        else:
-          print("No transitions found in path (single cluster strategy)")
-
-          # Show single cluster earning rate for each hour
-          print(f"Single cluster ({path[0]}) hourly rates:")
-          for t in range(min(args.duration, len(path))):
-            hour = (args.hour + t) % 24
-            current_date = args.date + timedelta(hours=t)
-
-            earning_rate = optimizer.compute_earning_rate(
-              optimizer.graphs[args.city], path[0], hour, args.city, current_date
-            )
-            surge = optimizer.get_surge_multiplier(args.city, hour)
-            weather = optimizer.get_weather_multiplier(args.city, current_date)
-
-            print(
-              f"Hour {t + 1:2d} ({hour:02d}:00): €{earning_rate:.2f}/h "
-              f"(surge: {surge:.2f}x, weather: {weather:.2f}x)"
-            )
 
       results["cluster_analysis"] = {
         "cluster": args.cluster,
         "total_earnings": earnings,
         "hourly_rate": earnings / args.duration,
         "optimal_path": path,
-        "lat": lat,
-        "lon": lon,
       }
 
     elif args.best_positions:
@@ -200,18 +147,18 @@ Examples:
       print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours")
       print("-" * 50)
 
-      best_positions = optimizer.analyze_best_starting_positions(
+      best_positions = analyzer.optimizer.analyze_best_starting_positions(
         args.city, args.hour, args.duration, args.date, args.top_k
       )
 
-      for i, (cluster, earnings, path, lat, lon) in enumerate(best_positions, 1):
-        print(f"{i:2d}. {cluster}: €{earnings:.2f} (€{earnings / args.duration:.2f}/h) at ({lat:.4f}, {lon:.4f})")
+      for i, (cluster, earnings, path) in enumerate(best_positions, 1):
+        print(f"{i:2d}. {cluster}: €{earnings:.2f} (€{earnings / args.duration:.2f}/h)")
         if args.verbose:
           print(f"    Path: {' -> '.join(path)}")
 
       results["best_positions"] = [
-        {"rank": i, "cluster": cluster, "earnings": earnings, "path": path, "lat": lat, "lon": lon}
-        for i, (cluster, earnings, path, lat, lon) in enumerate(best_positions, 1)
+        {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
+        for i, (cluster, earnings, path) in enumerate(best_positions, 1)
       ]
 
     elif args.compare_schedules:
@@ -234,54 +181,35 @@ Examples:
       print(schedule_results.to_string(index=False, float_format="%.2f"))
       results["schedule_comparison"] = schedule_results.to_dict("records")
 
-    elif args.weekly:
-      if not hasattr(args, "cluster") or not args.cluster:
-        cluster_arg = input("Enter starting cluster (e.g., c_3_2): ").strip()
-        if not cluster_arg:
-          print("Error: Cluster required for weekly analysis")
-          sys.exit(1)
-      else:
-        cluster_arg = args.cluster
+    else:
+        # Default behavior if no specific analysis is requested.
+        # This will run a single cluster analysis on the best possible starting cluster.
+        print("\n=== DEFAULT ANALYSIS (BEST STARTING POSITION) ===")
+        print(f"City: {args.city}, Date: {args.date.date()}")
+        print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours")
+        print("-" * 50)
+        best_positions = analyzer.optimizer.analyze_best_starting_positions(
+            args.city, args.hour, args.duration, args.date, top_k=1
+        )
+        if not best_positions:
+             raise Exception("Could not determine the best starting position.")
+        
+        cluster, earnings, path = best_positions[0]
+        print(f"Best starting cluster: {cluster}")
+        print(f"Expected total earnings: €{earnings:.2f}")
+        print(f"Expected hourly rate: €{earnings / args.duration:.2f}/hour")
+        print(f"Optimal path: {' -> '.join(path)}")
 
-      print("\n=== WEEKLY ANALYSIS ===")
-      print(f"City: {args.city}, Cluster: {cluster_arg}")
-      print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours daily")
-      print(f"Week starting: {args.date.date()}")
-      print("-" * 70)
-
-      weekly_results = analyzer.weekly_analysis(
-        args.city, cluster_arg, args.hour, args.duration, args.date
-      )
-
-      print(weekly_results.to_string(index=False, float_format="%.2f"))
-
-      weekly_avg = weekly_results["total_earnings"].mean()
-      weekly_total = weekly_results["total_earnings"].sum()
-      print("\nWeekly Summary:")
-      print(f"Total weekly earnings: €{weekly_total:.2f}")
-      print(f"Average daily earnings: €{weekly_avg:.2f}")
-      print(
-        f"Best day: {weekly_results.loc[weekly_results['total_earnings'].idxmax(), 'day_of_week']}"
-      )
-      print(
-        f"Worst day: {weekly_results.loc[weekly_results['total_earnings'].idxmin(), 'day_of_week']}"
-      )
-
-      results["weekly_analysis"] = weekly_results.to_dict("records")
-
-    elif args.cluster_popularity:
-      print("\n=== CLUSTER POPULARITY ===")
-      print(f"City: {args.city}, Hour: {args.hour:02d}:00")
-      print("-" * 70)
-
-      popularity_results = analyzer.cluster_popularity_analysis(args.city, args.hour)
-      print(popularity_results.to_string(index=False, float_format="%.2f"))
-
-      results["cluster_popularity"] = popularity_results.to_dict("records")
+        results["cluster_analysis"] = {
+            "cluster": cluster,
+            "total_earnings": earnings,
+            "hourly_rate": earnings / args.duration,
+            "optimal_path": path,
+        }
 
     # Export to JSON if requested
     if args.json:
-      analyzer.export_results_to_json(args.city, results, args.json)
+      analyzer.export_results_to_json(city_id=args.city, results=results, filename=args.json)
 
   except Exception as e:
     print(f"Error during analysis: {e}", file=sys.stderr)
