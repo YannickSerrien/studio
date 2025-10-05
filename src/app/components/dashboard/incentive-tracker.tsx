@@ -1,3 +1,4 @@
+
 import { Target } from 'lucide-react';
 import {
   Card,
@@ -17,13 +18,13 @@ type IncentiveTrackerProps = {
 
 
 const HighlightedDescription = ({ text, currency }: { text: string, currency: Settings['currency'] }) => {
-    const bonusAmount = 100; // Base bonus in USD
-    const convertedBonus = convertAndRound(bonusAmount, currency);
+    const baseBonusAmount = 100; // The bonus amount is $100 USD
+    const convertedBonus = convertAndRound(baseBonusAmount, currency);
     const bonusText = `${currency}${convertedBonus}`;
   
-    const textWithConvertedBonus = text.replace(/\$\d+(\.\d{1,2})?/, bonusText);
+    const textWithConvertedBonus = text.replace(/\$\d+/, bonusText);
 
-    const bonusRegex = new RegExp(`(${currency}\\d+(\\.\\d{1,2})?)`);
+    const bonusRegex = new RegExp(`(${currency}${convertedBonus})`);
     const parts = textWithConvertedBonus.split(bonusRegex);
   
     return (
