@@ -52,8 +52,9 @@ export default function ChatbotPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
     name: 'Karen',
-    currency: '$',
-    location: 'San Francisco, CA',
+    currency: '€',
+    country: 'Netherlands',
+    city: '3',
   });
   const pathname = usePathname();
   const searchParams = useSearchParams();

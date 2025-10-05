@@ -29,8 +29,8 @@ import { ScheduleDrive } from '@/app/components/dashboard/schedule-drive';
 export default function Home() {
   const [settings, setSettings] = useState<AppSettings>({
     name: 'Karen',
-    currency: '$',
-    location: 'San Francisco, CA',
+    currency: '€',
+    country: 'Netherlands',
     city: '3',
   });
   const { showWellnessNudge, setShowWellnessNudge } = useDriverStatus();

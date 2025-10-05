@@ -69,16 +69,14 @@ export function SettingsDialog({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="location" className="text-right">
-              Location
+            <Label htmlFor="country" className="text-right">
+              Country
             </Label>
             <Input
-              id="location"
-              value={currentSettings.location}
-              onChange={(e) =>
-                setCurrentSettings({ ...currentSettings, location: e.target.value })
-              }
-              className="col-span-3"
+              id="country"
+              value="Netherlands"
+              readOnly
+              className="col-span-3 bg-muted cursor-not-allowed"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
