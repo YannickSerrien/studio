@@ -17,15 +17,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid "duration" parameter. Must be a number between 2 and 12.' }, { status: 400 });
     }
 
-    const pythonExecutable = '/usr/bin/python3';
+    const pythonExecutable = 'python3';
     const scriptPath = path.join(process.cwd(), 'src', 'server', 'dp_cli.py');
     const tempOutputFile = path.join(os.tmpdir(), `results-${Date.now()}.json`);
     const dateToday = new Date().toISOString().split('T')[0];
 
-    const command = `${pythonExecutable} ${scriptPath} --city ${city} --date ${dateToday} --duration ${duration} --compare-schedules --json ${tempOutputFile}`;
-
-    const pythonProcess = spawn(command, {
-        shell: true,
+    const scriptArgs = [
+        scriptPath,
+        '--city', city,
+        '--date', dateToday,
+        '--duration', duration.toString(),
+        '--compare-schedules',
+        '--json', tempOutputFile,
+    ];
+    
+    const pythonProcess = spawn(pythonExecutable, scriptArgs, {
+        cwd: path.join(process.cwd(), 'src', 'server'),
         env: {
           ...process.env,
           PYTHONPATH: path.join(process.cwd(), 'src', 'server'),
