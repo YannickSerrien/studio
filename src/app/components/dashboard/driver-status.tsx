@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Power, Pause, Play } from 'lucide-react';
 import { useDriverStatus } from '@/app/contexts/driver-status-context';
 
+const BREAK_THRESHOLD_SECONDS = 16200; // 4.5 hours
+
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -34,8 +36,8 @@ export function DriverStatus() {
       setIsDriving(false);
       setShowWellnessNudge(false); // Reset the nudge when going offline
     } else {
-      // Going online
-      setDrivingSeconds(0); // Start timer from 0
+      // Going online - start 5 seconds before threshold for testing
+      setDrivingSeconds(BREAK_THRESHOLD_SECONDS - 5);
       setIsDriving(true);
     }
   };
