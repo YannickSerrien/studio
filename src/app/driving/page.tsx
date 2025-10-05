@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Header } from '@/app/components/dashboard/header';
 import { WellnessNudge } from '@/app/components/dashboard/wellness-nudge';
 import { type Settings as AppSettings } from '@/app/lib/data';
 import {
@@ -15,12 +14,13 @@ import {
   SidebarSeparator,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
+import { Bot, LayoutDashboard, Settings, CarFront, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import { DriverStatus } from '@/app/components/dashboard/driver-status';
 import { ScheduleDrive } from '@/app/components/dashboard/schedule-drive';
+import { Header } from '@/app/components/dashboard/header';
 
 export default function DrivingPage() {
   const [settings, setSettings] = useState<AppSettings>({

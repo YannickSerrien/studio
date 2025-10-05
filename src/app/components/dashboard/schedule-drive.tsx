@@ -3,120 +3,99 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Search, Loader2, AlertTriangle, Wallet, MapPin, Clock } from 'lucide-react';
-import type { Settings } from '@/app/lib/data';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Wallet, MapPin, Clock } from 'lucide-react';
+import type { Settings } from '@/app/lib/data';
 
 type ScheduleDriveProps = {
   city: Settings['city'];
   currency: Settings['currency'];
 };
 
-type OptimizationResult = {
-  start_hour: number;
-  total_earnings: number;
-  hourly_rate: number;
-  optimal_cluster: string;
+// --- Hardcoded Data ---
+const cityData: Record<string, { name: string; hotspot: string }> = {
+  '1': { name: 'Amsterdam', hotspot: 'De Pijp' },
+  '2': { name: 'Rotterdam', hotspot: 'Witte de Withstraat' },
+  '3': { name: 'Utrecht', hotspot: 'Neude' },
+  '4': { name: 'Eindhoven', hotspot: 'Stratumseind' },
+  '5': { name: 'Den Haag', hotspot: 'Plein' },
 };
 
-// Fixed duration for each check, e.g., an 8-hour shift
-const SHIFT_DURATION = 8;
+// Represents typical busy periods. Intensity is on a scale of 1-10.
+const busyHoursData: { hour: number; intensity: number; description: string }[] = [
+  { hour: 7, intensity: 7, description: 'Morning Commute' },
+  { hour: 8, intensity: 8, description: 'Morning Peak' },
+  { hour: 9, intensity: 7, description: 'Morning Commute' },
+  { hour: 12, intensity: 6, description: 'Lunch Hour' },
+  { hour: 13, intensity: 6, description: 'Lunch Hour' },
+  { hour: 17, intensity: 8, description: 'Evening Commute' },
+  { hour: 18, intensity: 9, description: 'Evening Peak' },
+  { hour: 19, intensity: 8, description: 'Evening Commute' },
+  { hour: 21, intensity: 7, description: 'Nightlife Start' },
+  { hour: 22, intensity: 9, description: 'Nightlife Peak' },
+  { hour: 23, intensity: 10, description: 'Nightlife Peak' },
+  { hour: 0, intensity: 9, description: 'Nightlife End' }, // After midnight
+  { hour: 1, intensity: 8, description: 'Nightlife End' },
+];
+// --- End Hardcoded Data ---
 
 export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [bestShift, setBestShift] = useState<OptimizationResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [clientReady, setClientReady] = useState(false);
   const [timeRange, setTimeRange] = useState([8, 18]); // Default e.g., 8 AM to 6 PM
 
   useEffect(() => {
-    // This effect runs once on the client after hydration,
-    // which is safe for operations like new Date().
+    // This effect runs once on the client after hydration.
     setClientReady(true);
   }, []);
-  
+
   const formatTime = (hour: number) => {
     if (!clientReady) return '...';
     const date = new Date();
     date.setHours(hour, 0, 0, 0);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   };
-  
-  const handleFindBestShift = async () => {
-    setIsLoading(true);
-    setBestShift(null);
-    setError(null);
 
-    const startHour = timeRange[0];
-    const endHour = timeRange[1];
-
-    if (startHour >= endHour) {
-      setError("Please select a valid time range where the start time is before the end time.");
-      setIsLoading(false);
-      return;
+  const bestTimeSuggestion = useMemo(() => {
+    const [start, end] = timeRange;
+    
+    // Create a range of hours to check
+    let hoursInRange = [];
+    if (start <= end) {
+      for (let i = start; i <= end; i++) {
+        hoursInRange.push(i);
+      }
+    } else { // Handle overnight ranges (e.g., 22:00 to 02:00)
+      for (let i = start; i < 24; i++) {
+        hoursInRange.push(i);
+      }
+      for (let i = 0; i <= end; i++) {
+        hoursInRange.push(i);
+      }
     }
 
-    try {
-      const promises: Promise<OptimizationResult>[] = [];
+    // Find the busiest hour within the selected range
+    const bestHour = busyHoursData
+      .filter(busyHour => hoursInRange.includes(busyHour.hour))
+      .reduce((best, current) => (current.intensity > best.intensity ? current : best), { hour: -1, intensity: -1, description: 'N/A' });
 
-      for (let hour = startHour; hour < endHour; hour++) {
-        // The Python API endpoint URL
-        const pythonApiUrl = `http://127.0.0.1:8000/api/v1/optimize/best_start_cluster`;
-
-        const promise = fetch(pythonApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-              city_id: parseInt(city, 10), 
-              start_hour: hour, 
-              duration: SHIFT_DURATION 
-            }),
-        }).then(async res => {
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(`Analysis for ${hour}:00 failed: ${errorData.detail || 'Unknown error'}`);
-            }
-            return res.json();
-        }).then(data => ({
-            start_hour: hour,
-            total_earnings: data.total_earnings,
-            hourly_rate: data.hourly_rate,
-            optimal_cluster: data.optimal_path[0],
-        }));
-        promises.push(promise);
-      }
-
-      const results = await Promise.all(promises);
-
-      if (results.length === 0) {
-        throw new Error("No time slots to analyze.");
-      }
-
-      // Find the result with the highest total earnings
-      const bestResult = results.reduce((best, current) => {
-        return current.total_earnings > best.total_earnings ? current : best;
-      }, results[0]);
-      
-      setBestShift(bestResult);
-
-    } catch (e: any) {
-      setError(e.message || 'An unexpected error occurred during analysis.');
-    } finally {
-      setIsLoading(false);
+    if (bestHour.intensity === -1) {
+      return null; // No busy hours found in this range
     }
-  };
+
+    return {
+      start_hour: bestHour.hour,
+      description: bestHour.description,
+      hotspot: cityData[city]?.hotspot || 'City Center',
+    };
+  }, [timeRange, city]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Optimal Shift Finder</CardTitle>
+        <CardTitle>Busiest Time Finder</CardTitle>
         <CardDescription>
-          Select your availability window to find the most profitable {SHIFT_DURATION}-hour shift.
+          Select your availability window to find the most profitable time to start driving.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -138,59 +117,36 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
             step={1}
             value={timeRange}
             onValueChange={setTimeRange}
-            disabled={isLoading || !clientReady}
+            disabled={!clientReady}
             className="w-full"
           />
         </div>
 
-        <Button onClick={handleFindBestShift} disabled={isLoading || !clientReady} className="w-full">
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing Shifts...
-            </>
-          ) : (
-            <>
-              <Search className="mr-2 h-4 w-4" />
-              Find Best Shift
-            </>
-          )}
-        </Button>
-
-        {error && (
-            <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Analysis Failed</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        )}
-
-        {bestShift && (
+        {bestTimeSuggestion ? (
           <div className="rounded-lg border border-accent/50 bg-accent/10 p-4 space-y-3 animate-in fade-in-0">
-            <h3 className="font-semibold text-center">Your Optimal {SHIFT_DURATION}-Hour Shift</h3>
+            <h3 className="font-semibold text-center">Your Suggested Strategy</h3>
             <div className="flex items-center justify-around text-center">
               <div>
                 <Label className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3"/>Best Start Time</Label>
-                <p className="text-xl font-bold text-accent-foreground">{formatTime(bestShift.start_hour)}</p>
+                <p className="text-xl font-bold text-accent-foreground">{formatTime(bestTimeSuggestion.start_hour)}</p>
+                <p className="text-xs text-muted-foreground">({bestTimeSuggestion.description})</p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3"/>Best Start Zone</Label>
-                <p className="text-xl font-bold text-accent-foreground">{bestShift.optimal_cluster}</p>
+                <Label className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3"/>Suggested Hotspot</Label>
+                <p className="text-xl font-bold text-accent-foreground">{bestTimeSuggestion.hotspot}</p>
+                 <p className="text-xs text-muted-foreground">({cityData[city]?.name || 'Your City'})</p>
               </div>
             </div>
             <div className="text-center pt-2">
-                <Label className="text-xs text-muted-foreground">Forecasted Earnings</Label>
-                <div className="flex items-center justify-center gap-2 mt-1">
-                    <Wallet className="h-5 w-5 text-accent" />
-                    <p className="text-2xl font-bold text-accent-foreground">
-                      {currency}{bestShift.total_earnings.toFixed(2)}
-                    </p>
-                </div>
-                 <p className="text-xs text-muted-foreground">
-                    (Avg: {currency}{bestShift.hourly_rate.toFixed(2)}/hr)
+                <p className="text-xs text-muted-foreground">
+                    Starting at this time and location gives you a high probability of finding consistent rides.
                 </p>
             </div>
           </div>
+        ) : (
+             <div className="text-center text-sm text-muted-foreground pt-4">
+                Move the slider to find the busiest time in your selected window.
+             </div>
         )}
       </CardContent>
     </Card>

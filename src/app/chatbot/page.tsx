@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bot, User, Send, Loader2, LayoutDashboard, Settings, CarFront } from 'lucide-react';
+import { Bot, User, Send, Loader2, LayoutDashboard, Settings, CarFront, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import type { Settings as AppSettings } from '@/app/lib/data';
+import { Header } from '../components/dashboard/header';
 
 type Message = {
   role: 'user' | 'model';
@@ -58,6 +59,7 @@ export default function ChatbotPage() {
   });
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     const prompt = searchParams.get('prompt');
@@ -107,6 +109,9 @@ export default function ChatbotPage() {
     <SidebarProvider>
       <Sidebar>
         <SidebarContent>
+           <div className="p-4 sm:hidden">
+              <Header />
+            </div>
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/">
@@ -140,18 +145,19 @@ export default function ChatbotPage() {
             </SidebarMenuItem>
             <SidebarSeparator />
             <SidebarMenuItem>
-               <SettingsDialog settings={settings} onSettingsChange={setSettings}>
-                 <SidebarMenuButton tooltip="Settings">
+                <SidebarMenuButton tooltip="Settings" onClick={() => setIsSettingsOpen(true)}>
                     <Settings />
                     <span>Settings</span>
                 </SidebarMenuButton>
-              </SettingsDialog>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col min-h-screen bg-background">
+          <div className="hidden sm:block">
+            <Header />
+          </div>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-3xl">
               <Card className="h-[80vh] flex flex-col">
@@ -240,6 +246,7 @@ export default function ChatbotPage() {
           </main>
         </div>
       </SidebarInset>
+      <SettingsDialog settings={settings} onSettingsChange={setSettings} open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </SidebarProvider>
   );
 }
