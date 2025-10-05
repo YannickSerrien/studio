@@ -5,13 +5,21 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Wallet, MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock, Search } from 'lucide-react';
 import type { Settings } from '@/app/lib/data';
+import { Button } from '@/components/ui/button';
 
 type ScheduleDriveProps = {
   city: Settings['city'];
   currency: Settings['currency'];
 };
+
+type Suggestion = {
+  start_hour: number;
+  description: string;
+  hotspot: string;
+};
+
 
 // --- Hardcoded Data ---
 const cityData: Record<string, { name: string; hotspot: string }> = {
@@ -43,6 +51,7 @@ const busyHoursData: { hour: number; intensity: number; description: string }[] 
 export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
   const [clientReady, setClientReady] = useState(false);
   const [timeRange, setTimeRange] = useState([8, 18]); // Default e.g., 8 AM to 6 PM
+  const [bestTimeSuggestion, setBestTimeSuggestion] = useState<Suggestion | null>(null);
 
   useEffect(() => {
     // This effect runs once on the client after hydration.
@@ -56,7 +65,7 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   };
 
-  const bestTimeSuggestion = useMemo(() => {
+  const handleFindBestTime = () => {
     const [start, end] = timeRange;
     
     // Create a range of hours to check
@@ -80,15 +89,15 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
       .reduce((best, current) => (current.intensity > best.intensity ? current : best), { hour: -1, intensity: -1, description: 'N/A' });
 
     if (bestHour.intensity === -1) {
-      return null; // No busy hours found in this range
+       setBestTimeSuggestion(null); // No busy hours found in this range
+    } else {
+      setBestTimeSuggestion({
+        start_hour: bestHour.hour,
+        description: bestHour.description,
+        hotspot: cityData[city]?.hotspot || 'City Center',
+      });
     }
-
-    return {
-      start_hour: bestHour.hour,
-      description: bestHour.description,
-      hotspot: cityData[city]?.hotspot || 'City Center',
-    };
-  }, [timeRange, city]);
+  };
 
   return (
     <Card>
@@ -121,6 +130,13 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
             className="w-full"
           />
         </div>
+        
+        <div className="flex justify-center">
+            <Button onClick={handleFindBestTime} disabled={!clientReady}>
+                <Search className="mr-2 h-4 w-4" />
+                Find Best Time
+            </Button>
+        </div>
 
         {bestTimeSuggestion ? (
           <div className="rounded-lg border border-accent/50 bg-accent/10 p-4 space-y-3 animate-in fade-in-0">
@@ -145,7 +161,7 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
           </div>
         ) : (
              <div className="text-center text-sm text-muted-foreground pt-4">
-                Move the slider to find the busiest time in your selected window.
+                Move the slider and click "Find Best Time" to see your optimal strategy.
              </div>
         )}
       </CardContent>
