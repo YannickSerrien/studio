@@ -35,22 +35,21 @@ router = APIRouter()
 data_service = DataService()
 
 
-@router.get("/optimize", summary="Run DP Optimization", tags=["optimization"])
-async def run_optimization(
+@router.get("/optimize/best_start_cluster", summary="Find Best Starting Cluster for a Shift", tags=["optimization"])
+async def find_best_start_cluster(
     city_id: int = Query(..., description="City ID (1-5)", ge=1, le=5),
-    start_hour: int = Query(..., description="Starting hour (0-23)", ge=0, le=23),
+    start_hour: int = Query(..., description="Starting hour of the shift (0-23)", ge=0, le=23),
     duration: int = Query(..., description="Work duration in hours (1-24)", ge=1, le=24),
 ):
     """
-    Finds the best starting cluster for a given time slot.
+    Finds the single best starting cluster (location) for a given shift start time and duration.
     """
     try:
-        # Initialize the optimizer. This is a singleton, so it's efficient.
         optimizer = MobilityOptimizer()
-
-        # We want the single best starting position for the given slot.
-        # The date is used for weather prediction.
         today = datetime.now()
+        
+        # analyze_best_starting_positions will check all clusters for the given time
+        # and return the top one.
         best_positions = optimizer.analyze_best_starting_positions(
             city_id=city_id,
             start_hour=start_hour,
@@ -68,11 +67,10 @@ async def run_optimization(
         # Extract the single best result
         best_cluster, earnings, path = best_positions[0]
 
-        # Format the response to match what the frontend expects
         result = {
             "total_earnings": earnings,
             "hourly_rate": earnings / duration if duration > 0 else 0,
-            "optimal_path": path,
+            "optimal_path": path, # The first element is the best starting cluster
         }
         return result
 
@@ -660,7 +658,7 @@ async def select_time(driver_id: str, request: TimeSelectionRequest) -> dict[str
     HTTPException: 400 if invalid time or no preferences set, 500 if storage fails
 
   """
-  try
+  try:
     result = await data_service.select_time(driver_id, request.time)
     return {"status": "success", "data": result}
   except ValueError as e:

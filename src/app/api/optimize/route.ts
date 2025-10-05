@@ -15,17 +15,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid "startHour" parameter.' }, { status: 400 });
     }
     
-    if (duration === undefined || typeof duration !== 'number' || duration <= 0 || duration > 24) {
+    if (duration === undefined || typeof duration !== 'number' || duration <= 0) {
       return NextResponse.json({ error: 'Invalid "duration" parameter.' }, { status: 400 });
     }
     
-    // The Python server runs on port 8000. We forward the request to it.
-    // NOTE: In a real production environment, you might use a more robust
-    // service discovery method or environment variables for the URL.
-    const pythonApiUrl = `http://127.0.0.1:8000/api/v1/optimize?city_id=${city}&start_hour=${startHour}&duration=${duration}`;
+    const pythonApiUrl = `http://127.0.0.1:8000/api/v1/optimize/best_start_cluster?city_id=${city}&start_hour=${startHour}&duration=${duration}`;
 
     const response = await fetch(pythonApiUrl, {
-        method: 'GET', // The new endpoint will be a GET request
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json',
         },
@@ -34,7 +31,6 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
 
     if (!response.ok) {
-      // Forward the error from the Python service
       throw new Error(data.detail || 'The optimization algorithm failed on the Python server.');
     }
 
