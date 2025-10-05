@@ -19,9 +19,8 @@ import {
 } from '@/components/ui/sidebar';
 import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
-import { useDriverStatus } from '@/app/contexts/driver-status-context';
 
 export default function Home() {
   const [settings, setSettings] = useState<AppSettings>({
@@ -30,21 +29,8 @@ export default function Home() {
     country: 'Netherlands',
     city: '3',
   });
-  const { showWellnessNudge, setShowWellnessNudge } = useDriverStatus();
   const pathname = usePathname();
-  const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  useEffect(() => {
-    if (showWellnessNudge) {
-      const queryParams = new URLSearchParams({
-        prompt: `Hey ${settings.name}, you've been driving for a while now. Time for a well-deserved break! Let me know if you'd like some ideas for how to best spend your break time.`
-      }).toString();
-      router.push(`/chatbot?${queryParams}`);
-      setShowWellnessNudge(false); // Reset the nudge to prevent re-triggering
-    }
-  }, [showWellnessNudge, router, settings.name, setShowWellnessNudge]);
-
 
   return (
     <SidebarProvider>
