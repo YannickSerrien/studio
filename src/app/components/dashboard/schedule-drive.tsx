@@ -26,21 +26,19 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // State to hold client-side calculated values to prevent hydration mismatch
   const [clientReady, setClientReady] = useState(false);
   const [timeLabels, setTimeLabels] = useState<Date[]>([]);
-  const [timeRange, setTimeRange] = useState([12, 48]); // Default: 3 hours from now to 12 hours from now
+  const [timeRange, setTimeRange] = useState([12, 48]); 
   
-  // This effect runs only on the client, after the initial render.
   useEffect(() => {
     const now = new Date();
     const labels = [];
-    for (let i = 0; i < 24 * 4; i++) { // 24 hours, 4 intervals per hour
+    for (let i = 0; i < 24 * 4; i++) { 
       const date = new Date(now.getTime() + i * 15 * 60 * 1000);
       labels.push(date);
     }
     setTimeLabels(labels);
-    setClientReady(true); // Mark client as ready
+    setClientReady(true);
   }, []);
 
 
@@ -48,14 +46,15 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
   const sliderMax = (timeLabels.length || 0) - 1;
 
   const formatTime = (sliderValue: number) => {
-    if (!clientReady || !timeLabels[sliderValue]) return '...'; // Render placeholder on server
+    if (!clientReady || !timeLabels[sliderValue]) return '...';
     const date = timeLabels[sliderValue];
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
   const durationInHours = useMemo(() => {
+    if (!clientReady) return 0;
     return (timeRange[1] - timeRange[0]) / 4;
-  }, [timeRange]);
+  }, [timeRange, clientReady]);
 
 
   const handleForecast = async () => {
@@ -81,24 +80,13 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
         body: JSON.stringify({ city, startHour, duration: Math.round(durationInHours) }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'The optimization algorithm failed.');
-      }
-
       const data = await response.json();
-      const result = data?.analysis?.best_positions?.[0];
 
-      if (!result) {
-        throw new Error('No valid forecast was returned from the analysis.');
+      if (!response.ok) {
+        throw new Error(data.error || 'The optimization algorithm failed.');
       }
       
-      const transformedResult: ForecastResult = {
-        total_earnings: result.earnings,
-        hourly_rate: result.earnings / Math.round(durationInHours),
-        optimal_path: result.path
-      };
-      setForecast(transformedResult);
+      setForecast(data);
 
     } catch (e: any) {
       setError(e.message || 'An unexpected error occurred.');

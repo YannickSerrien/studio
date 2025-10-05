@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid "startHour" parameter. Must be a number between 0 and 23.' }, { status: 400 });
     }
     
-    if (!duration || typeof duration !== 'number' || duration <= 0 || duration > 24) {
+    if (duration === undefined || typeof duration !== 'number' || duration <= 0 || duration > 24) {
       return NextResponse.json({ error: 'Invalid "duration" parameter. Must be a positive number up to 24.' }, { status: 400 });
     }
 
@@ -26,16 +26,14 @@ export async function POST(request: Request) {
     const tempOutputFile = path.join(os.tmpdir(), `results-${Date.now()}.json`);
     const dateToday = new Date().toISOString().split('T')[0];
 
-    // For a specific time slot, we need to find the best cluster to start in.
-    // So we use `--best-positions`
     const scriptArgs = [
         scriptPath,
-        '--city', city,
+        '--city', city.toString(),
         '--date', dateToday,
         '--hour', startHour.toString(),
         '--duration', duration.toString(),
         '--best-positions',
-        '--top-k', '1', // We only need the single best one
+        '--top-k', '1',
         '--json', tempOutputFile,
     ];
     
@@ -65,35 +63,32 @@ export async function POST(request: Request) {
              const resultData = await fs.readFile(tempOutputFile, 'utf-8');
              await fs.unlink(tempOutputFile); 
              const result = JSON.parse(resultData);
-             // Since we are asking for the best position, the result is in a different format.
-             // We will extract the first (and only) result to match the old `cluster_analysis` format
-             // for frontend compatibility.
+             
              if (result.analysis?.best_positions && result.analysis.best_positions.length > 0) {
                 const bestPosition = result.analysis.best_positions[0];
-                resolve({
-                    cluster_analysis: {
-                        cluster: bestPosition.cluster,
-                        total_earnings: bestPosition.earnings,
-                        hourly_rate: bestPosition.earnings / duration,
-                        optimal_path: bestPosition.path
-                    }
-                });
+                const transformedResult = {
+                    total_earnings: bestPosition.earnings,
+                    hourly_rate: bestPosition.earnings / duration,
+                    optimal_path: bestPosition.path
+                };
+                resolve(transformedResult);
              } else {
-                reject(new Error('No best position found in algorithm output.'));
+                reject(new Error(`No best position found in algorithm output. Stdout: ${stdout} Stderr: ${stderr}`));
              }
 
           } catch (e: any) {
-            console.error(`Failed to parse Python script output file: ${e.message}`);
-            console.error(`stdout from script: ${stdout}`);
-            reject(new Error('Failed to parse Python script output.'));
+            console.error(`Failed to read or parse Python script output file: ${e.message}`);
+            reject(new Error(`Failed to parse script output. Stdout: ${stdout} Stderr: ${stderr}`));
           }
         } else {
-            console.error(`Python script stderr: ${stderr}`);
-            reject(new Error(`Python script exited with code ${code}: ${stderr}`));
+            const errorMessage = `Python script exited with code ${code}. Stderr: ${stderr || 'N/A'}. Stdout: ${stdout || 'N/A'}`;
+            console.error(errorMessage);
+            reject(new Error(errorMessage));
         }
       });
 
       pythonProcess.on('error', (err) => {
+        console.error(`Failed to start Python script: ${err.message}`);
         reject(new Error(`Failed to start Python script: ${err.message}`));
       });
     });
@@ -102,7 +97,7 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
 
   } catch (error: any) {
-    console.error('API Error:', error);
+    console.error('API Error:', error.message);
     return NextResponse.json({ error: error.message || 'An internal server error occurred.' }, { status: 500 });
   }
 }
