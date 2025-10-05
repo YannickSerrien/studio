@@ -9,11 +9,10 @@ to Cytoscape elements for interactive UI rendering.
 import networkx as nx
 import numpy as np
 import pandas as pd
+
 import os
 
-# Correct the path to be relative to this file's location
-base_dir = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(base_dir, 'data', 'ride_trips_with_clusters.csv')
+CSV_PATH = "/workspace/server/data/ride_trips_with_clusters.csv"
 
 # Read CSV
 rides = pd.read_csv(CSV_PATH)
@@ -118,3 +117,88 @@ def build_city_graphs(rides: pd.DataFrame) -> dict[int, nx.DiGraph]:
       )
     city_graphs[int(city_id)] = g
   return city_graphs
+
+
+def graph_to_cytoscape_elements(g: nx.DiGraph) -> list[dict]:
+  """Convert a NetworkX graph to Cytoscape elements list for interactive UI rendering."""
+  elements: list[dict] = []
+  # Compute bounds for positions
+  lat_vals = [float(d.get("lat", 0.0)) for _, d in g.nodes(data=True)]
+  lon_vals = [float(d.get("lon", 0.0)) for _, d in g.nodes(data=True)]
+  if lat_vals and lon_vals:
+    lat_min, lat_max = min(lat_vals), max(lat_vals)
+    lon_min, lon_max = min(lon_vals), max(lon_vals)
+    lat_span = max(lat_max - lat_min, 1e-9)
+    lon_span = max(lon_max - lon_min, 1e-9)
+  else:
+    lat_min = lat_max = lon_min = lon_max = 0.0
+    lat_span = lon_span = 1.0
+  # Nodes
+  for node_id, data in g.nodes(data=True):
+    lat_val = float(data.get("lat", 0.0))
+    lon_val = float(data.get("lon", 0.0))
+    # Normalize to a fixed canvas size
+    x_pos = (lon_val - lon_min) / lon_span * 1000.0
+    y_pos = (lat_val - lat_min) / lat_span * 800.0
+    elements.append(
+      {
+        "data": {
+          "id": node_id,
+          "label": node_id,
+          "lat": lat_val,
+          "lon": lon_val,
+        },
+        "position": {"x": x_pos, "y": y_pos},
+      }
+    )
+  # Edges
+  for u, v, data in g.edges(data=True):
+    elements.append(
+      {
+        "data": {
+          "id": f"{u}->{v}",
+          "source": u,
+          "target": v,
+          "avg_time": float(data.get("avg_time", 0.0)),
+          "avg_price": float(data.get("avg_price", 0.0)),
+          "total_trips": int(data.get("total_trips", 0)),
+          "hourly_trips": data.get("hourly_trips", {}),
+          "hourly_avg_time": data.get("hourly_avg_time", {}),
+          "hourly_avg_price": data.get("hourly_avg_price", {}),
+        }
+      }
+    )
+  return elements
+
+
+def save_graphs(graphs, output_dir="graphs"):
+  """Save graphs to pickle file."""
+  import pickle
+  os.makedirs(output_dir, exist_ok=True)
+  
+  pickle_path = os.path.join(output_dir, "city_graphs.pkl")
+  with open(pickle_path, 'wb') as f:
+    pickle.dump(graphs, f)
+  print(f"✓ Saved graphs to {pickle_path}")
+  return pickle_path
+
+if __name__ == "__main__":
+  graphs = build_city_graphs(rides)
+  
+  # Save graphs
+  save_graphs(graphs)
+  
+  # Print summary
+  total_trips = sum(
+    sum(d.get('total_trips', 0) for _, _, d in g.edges(data=True))
+    for g in graphs.values()
+  )
+  
+  print(f"\n✓ Built graphs for {len(graphs)} cities")
+  print(f"✓ Total trips: {total_trips:,}")
+  
+  for city, g in graphs.items():
+    city_trips = sum(d.get('total_trips', 0) for _, _, d in g.edges(data=True))
+    print(f"  City {city}: {len(g.nodes)} clusters, {len(g.edges)} routes, {city_trips:,} trips")
+
+    
