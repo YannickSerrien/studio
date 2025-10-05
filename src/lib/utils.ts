@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { type Settings } from '@/app/lib/data';
@@ -16,11 +17,9 @@ const CONVERSION_RATES: Record<Settings['currency'], number> = {
   
 
 export function convertAndRound(amountInUsd: number, currency: Settings['currency']): number {
-    if (currency === '$') {
-        return Math.round(amountInUsd / 10) * 10;
-    }
     const rate = CONVERSION_RATES[currency];
     const convertedAmount = amountInUsd * rate;
+
     // Round to the nearest 10
     return Math.round(convertedAmount / 10) * 10;
 }
