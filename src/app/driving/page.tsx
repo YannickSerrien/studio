@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { type Settings as AppSettings } from '@/app/lib/data';
 import {
   Sidebar,
   SidebarProvider,
@@ -20,14 +19,11 @@ import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import { DriverStatus } from '@/app/components/dashboard/driver-status';
 import { ScheduleDrive } from '@/app/components/dashboard/schedule-drive';
 import { Header } from '@/app/components/dashboard/header';
+import { useSettings } from '@/app/contexts/settings-context';
+
 
 export default function DrivingPage() {
-  const [settings, setSettings] = useState<AppSettings>({
-    name: 'Karen',
-    currency: '€',
-    country: 'Netherlands',
-    city: '3',
-  });
+  const { settings, setSettings } = useSettings();
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 

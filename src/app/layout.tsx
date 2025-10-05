@@ -1,24 +1,19 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { DriverStatusProvider, useDriverStatus } from '@/app/contexts/driver-status-context';
-import type { Settings as AppSettings } from '@/app/lib/data';
+import { SettingsProvider, useSettings } from '@/app/contexts/settings-context';
 
 
 function AppContent({ children }: { children: React.ReactNode }) {
   // We need to wrap the logic in a component so we can use the hooks
   const router = useRouter();
   const { showWellnessNudge, setShowWellnessNudge } = useDriverStatus();
-  const [settings, setSettings] = useState<AppSettings>({
-    name: 'Karen',
-    currency: '€',
-    country: 'Netherlands',
-    city: '3',
-  });
+  const { settings } = useSettings();
 
   useEffect(() => {
     if (showWellnessNudge) {
@@ -56,12 +51,14 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased" suppressHydrationWarning={true}>
-        <DriverStatusProvider>
-           <AppContent>
-             {children}
-           </AppContent>
-          <Toaster />
-        </DriverStatusProvider>
+        <SettingsProvider>
+            <DriverStatusProvider>
+               <AppContent>
+                 {children}
+               </AppContent>
+              <Toaster />
+            </DriverStatusProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

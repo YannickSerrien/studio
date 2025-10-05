@@ -23,8 +23,9 @@ import {
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
-import type { Settings as AppSettings } from '@/app/lib/data';
 import { Header } from '@/app/components/dashboard/header';
+import { useSettings } from '@/app/contexts/settings-context';
+
 
 type Message = {
   role: 'user' | 'model';
@@ -51,12 +52,7 @@ export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [settings, setSettings] = useState<AppSettings>({
-    name: 'Karen',
-    currency: '€',
-    country: 'Netherlands',
-    city: '3',
-  });
+  const { settings, setSettings } = useSettings();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

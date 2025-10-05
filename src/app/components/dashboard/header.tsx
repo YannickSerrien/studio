@@ -1,6 +1,6 @@
 
 'use client';
-import { PanelLeft, Bot, LayoutDashboard, Settings, CarFront, Calendar } from 'lucide-react';
+import { PanelLeft, Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -10,17 +10,13 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { type Settings as AppSettings } from '@/app/lib/data';
 import { SettingsDialog } from './settings-dialog';
+import { useSettings } from '@/app/contexts/settings-context';
+
 
 export function Header() {
   const pathname = usePathname();
-  const [settings, setSettings] = useState<AppSettings>({
-    name: 'Karen',
-    currency: '€',
-    country: 'Netherlands',
-    city: '3',
-  });
+  const { settings, setSettings } = useSettings();
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
 

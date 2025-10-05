@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -39,6 +39,10 @@ export function SettingsDialog({
   onOpenChange
 }: SettingsDialogProps) {
   const [currentSettings, setCurrentSettings] = useState<Settings>(settings);
+
+  useEffect(() => {
+    setCurrentSettings(settings);
+  }, [settings]);
 
   const handleSave = () => {
     onSettingsChange(currentSettings);

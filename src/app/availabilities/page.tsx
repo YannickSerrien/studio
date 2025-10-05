@@ -28,9 +28,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
-import type { Settings as AppSettings } from '@/app/lib/data';
 import { cn } from '@/lib/utils';
 import { Header } from '@/app/components/dashboard/header';
+import { useSettings } from '@/app/contexts/settings-context';
 
 
 function TimeSlot({ time }: { time: string }) {
@@ -43,12 +43,7 @@ function TimeSlot({ time }: { time: string }) {
 }
 
 export default function AvailabilitiesPage() {
-  const [settings, setSettings] = useState<AppSettings>({
-    name: 'Karen',
-    currency: '€',
-    country: 'Netherlands',
-    city: '3',
-  });
+  const { settings, setSettings } = useSettings();
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 

@@ -1,12 +1,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Header } from '@/app/components/dashboard/header';
 import { WeeklySummary } from '@/app/components/dashboard/weekly-summary';
 import { DailyHighlights } from '@/app/components/dashboard/daily-highlights';
 import { IncentiveTracker } from '@/app/components/dashboard/incentive-tracker';
-import { type Settings as AppSettings } from '@/app/lib/data';
 import {
   Sidebar,
   SidebarProvider,
@@ -21,14 +20,11 @@ import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
+import { useSettings } from '@/app/contexts/settings-context';
+
 
 export default function Home() {
-  const [settings, setSettings] = useState<AppSettings>({
-    name: 'Karen',
-    currency: '€',
-    country: 'Netherlands',
-    city: '3',
-  });
+  const { settings, setSettings } = useSettings();
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
