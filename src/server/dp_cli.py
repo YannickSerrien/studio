@@ -55,19 +55,15 @@ Examples:
   )
 
   # Analysis type
-  # Mutually exclusive group is no longer required as we can combine them.
-  parser.add_argument(
+  analysis_group = parser.add_mutually_exclusive_group(required=False)
+  analysis_group.add_argument(
     "--cluster", type=str, help="Analyze specific starting cluster (e.g., c_3_2)"
   )
-  parser.add_argument(
+  analysis_group.add_argument(
     "--best-positions", action="store_true", help="Find best starting positions"
   )
-  parser.add_argument(
+  analysis_group.add_argument(
     "--compare-schedules", action="store_true", help="Compare different work schedules"
-  )
-  parser.add_argument("--weekly", action="store_true", help="Weekly earnings analysis")
-  parser.add_argument(
-    "--cluster-popularity", action="store_true", help="Analyze cluster popularity"
   )
 
   # Optional parameters
@@ -119,93 +115,49 @@ Examples:
   results = {}
 
   try:
-    # Execute analysis based on selected type
     if args.cluster:
-      print(f"\n=== CLUSTER ANALYSIS: {args.cluster} ===")
-      print(f"City: {args.city}, Date: {args.date.date()}")
-      print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours")
-      print("-" * 50)
-
-      earnings, path = optimizer.solve_dp(
-        args.city, args.cluster, args.hour, args.duration, args.date
-      )
-
-      print(f"Expected total earnings: €{earnings:.2f}")
-      print(f"Expected hourly rate: €{earnings / args.duration:.2f}/hour")
-      print(f"Optimal path: {' -> '.join(path)}")
-
-      results["cluster_analysis"] = {
-        "cluster": args.cluster,
-        "total_earnings": earnings,
-        "hourly_rate": earnings / args.duration,
-        "optimal_path": path,
-      }
+        print(f"\n=== CLUSTER ANALYSIS: {args.cluster} ===")
+        earnings, path = optimizer.solve_dp(
+            args.city, args.cluster, args.hour, args.duration, args.date
+        )
+        results["cluster_analysis"] = {
+            "cluster": args.cluster, "total_earnings": earnings,
+            "hourly_rate": earnings / args.duration, "optimal_path": path
+        }
 
     elif args.best_positions:
-      print("\n=== BEST STARTING POSITIONS ===")
-      print(f"City: {args.city}, Date: {args.date.date()}")
-      print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours")
-      print("-" * 50)
-
-      best_positions = analyzer.optimizer.analyze_best_starting_positions(
-        args.city, args.hour, args.duration, args.date, args.top_k
-      )
-
-      for i, (cluster, earnings, path) in enumerate(best_positions, 1):
-        print(f"{i:2d}. {cluster}: €{earnings:.2f} (€{earnings / args.duration:.2f}/h)")
-        if args.verbose:
-          print(f"    Path: {' -> '.join(path)}")
-
-      results["best_positions"] = [
-        {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
-        for i, (cluster, earnings, path) in enumerate(best_positions, 1)
-      ]
+        print("\n=== BEST STARTING POSITIONS ===")
+        best_positions = analyzer.optimizer.analyze_best_starting_positions(
+            args.city, args.hour, args.duration, args.date, args.top_k
+        )
+        results["best_positions"] = [
+            {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
+            for i, (cluster, earnings, path) in enumerate(best_positions, 1)
+        ]
 
     elif args.compare_schedules:
-      # Use a default cluster if none is provided, as it's not critical for this analysis type
-      # We pick the first available cluster for the city.
-      cluster_arg = next(iter(optimizer.graphs[args.city].nodes()))
-      
-      print("\n=== SCHEDULE COMPARISON ===")
-      print(f"City: {args.city}, Date: {args.date.date()}")
-      print(f"Analyzing for a {args.duration}-hour shift...")
-      print("-" * 70)
-
-      # Test all 24 hours as potential start times for the given duration
-      schedules = [(hour, args.duration) for hour in range(24)]
-
-      schedule_results = analyzer.compare_work_schedules(
-        args.city, cluster_arg, args.date, schedules
-      )
-
-      print(schedule_results.to_string(index=False, float_format="%.2f"))
-      results["schedule_comparison"] = schedule_results.to_dict("records")
-
-    else:
-        # Default behavior if no specific analysis is requested.
-        # This will run a single cluster analysis on the best possible starting cluster.
-        print("\n=== DEFAULT ANALYSIS (BEST STARTING POSITION) ===")
-        print(f"City: {args.city}, Date: {args.date.date()}")
-        print(f"Schedule: {args.hour:02d}:00 for {args.duration} hours")
-        print("-" * 50)
-        best_positions = analyzer.optimizer.analyze_best_starting_positions(
-            args.city, args.hour, args.duration, args.date, top_k=1
-        )
-        if not best_positions:
-             raise Exception("Could not determine the best starting position.")
+        print("\n=== SCHEDULE COMPARISON ===")
+        # For schedule comparison, we need a starting cluster.
+        # We'll pick the first available one for the city as a default.
+        default_cluster = next(iter(optimizer.graphs[args.city].nodes()))
+        cluster_arg = args.cluster if args.cluster else default_cluster
         
-        cluster, earnings, path = best_positions[0]
-        print(f"Best starting cluster: {cluster}")
-        print(f"Expected total earnings: €{earnings:.2f}")
-        print(f"Expected hourly rate: €{earnings / args.duration:.2f}/hour")
-        print(f"Optimal path: {' -> '.join(path)}")
-
-        results["cluster_analysis"] = {
-            "cluster": cluster,
-            "total_earnings": earnings,
-            "hourly_rate": earnings / args.duration,
-            "optimal_path": path,
-        }
+        schedules = [(hour, args.duration) for hour in range(24)] # Check all start hours
+        schedule_results = analyzer.compare_work_schedules(
+            args.city, cluster_arg, args.date, schedules
+        )
+        results["schedule_comparison"] = schedule_results.to_dict("records")
+    
+    else:
+        # Fallback to best_positions if no specific analysis is chosen
+        print("\n=== DEFAULT ANALYSIS (BEST STARTING POSITIONS) ===")
+        best_positions = analyzer.optimizer.analyze_best_starting_positions(
+            args.city, args.hour, args.duration, args.date, args.top_k
+        )
+        results["best_positions"] = [
+            {"rank": i, "cluster": cluster, "earnings": earnings, "path": path}
+            for i, (cluster, earnings, path) in enumerate(best_positions, 1)
+        ]
 
     # Export to JSON if requested
     if args.json:

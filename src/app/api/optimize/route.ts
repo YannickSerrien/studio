@@ -21,13 +21,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid "duration" parameter. Must be a positive number up to 24.' }, { status: 400 });
     }
 
-    const pythonExecutable = 'python3';
     const scriptPath = path.join(process.cwd(), 'src', 'server', 'dp_cli.py');
     const tempOutputFile = path.join(os.tmpdir(), `results-${Date.now()}.json`);
     const dateToday = new Date().toISOString().split('T')[0];
 
     const scriptArgs = [
-        scriptPath,
         '--city', city.toString(),
         '--date', dateToday,
         '--hour', startHour.toString(),
@@ -37,12 +35,14 @@ export async function POST(request: Request) {
         '--json', tempOutputFile,
     ];
     
-    const pythonProcess = spawn(pythonExecutable, scriptArgs, {
+    // Execute the script directly
+    const pythonProcess = spawn(scriptPath, scriptArgs, {
         cwd: path.join(process.cwd(), 'src', 'server'),
         env: {
           ...process.env,
           PYTHONPATH: path.join(process.cwd(), 'src', 'server'),
-        }
+        },
+        shell: false, // Important: shell: false is more secure and predictable
     });
 
     let stdout = '';
