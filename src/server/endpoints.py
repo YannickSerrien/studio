@@ -5,7 +5,7 @@
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Path, Query, status
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 from pydantic import BaseModel
 from app.ai_agent import AIAgentService, ChatMessage
@@ -47,15 +47,24 @@ async def find_best_start_cluster(request: OptimizationRequest):
     """
     try:
         optimizer = MobilityOptimizer()
-        today = datetime.now()
+        now = datetime.now()
         
+        # Determine if the start hour is for today or tomorrow
+        if request.start_hour < now.hour:
+            # If the requested start hour is in the past, assume it's for the next day
+            start_date = now + timedelta(days=1)
+        else:
+            start_date = now
+            
+        start_date = start_date.replace(hour=request.start_hour, minute=0, second=0, microsecond=0)
+
         # analyze_best_starting_positions will check all clusters for the given time
         # and return the top one.
         best_positions = optimizer.analyze_best_starting_positions(
             city_id=request.city_id,
             start_hour=request.start_hour,
             work_hours=request.duration,
-            start_date=today,
+            start_date=start_date,
             top_k=1,
         )
 

@@ -1,3 +1,4 @@
+
 """FastAPI application for JunctionX Uber Challenge."""
 
 from collections.abc import AsyncIterator
@@ -30,7 +31,7 @@ app = FastAPI(
 # This is crucial for cross-origin communication between Next.js and FastAPI
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=["*"],  # Allow all origins for simplicity, can be restricted
+  allow_origins=["http://localhost:9002"],  # Allow your Next.js dev server
   allow_credentials=True,
   allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
   allow_headers=["*"],  # Allow all headers

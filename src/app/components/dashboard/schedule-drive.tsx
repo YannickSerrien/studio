@@ -30,23 +30,16 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
   const [bestShift, setBestShift] = useState<OptimizationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [clientReady, setClientReady] = useState(false);
-  const [timeLabels, setTimeLabels] = useState<Date[]>([]);
   const [timeRange, setTimeRange] = useState([8, 18]); // Default e.g., 8 AM to 6 PM
 
-  // Generate time labels for a 24-hour period in 1-hour intervals
   useEffect(() => {
-    const now = new Date();
-    now.setMinutes(0, 0, 0); // Start from the current hour
-    const labels = Array.from({ length: 24 }, (_, i) => {
-      const date = new Date(now.getTime() + i * 60 * 60 * 1000);
-      return date;
-    });
-    setTimeLabels(labels);
+    // This effect runs once on the client after hydration,
+    // which is safe for operations like new Date().
     setClientReady(true);
   }, []);
-
+  
   const formatTime = (hour: number) => {
-    if (!clientReady || !timeLabels.length) return '...';
+    if (!clientReady) return '...';
     const date = new Date();
     date.setHours(hour, 0, 0, 0);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -70,15 +63,23 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
       const promises: Promise<OptimizationResult>[] = [];
 
       for (let hour = startHour; hour < endHour; hour++) {
-        const promise = fetch('/api/optimize', {
+        // The Python API endpoint URL
+        const pythonApiUrl = `http://127.0.0.1:8000/api/v1/optimize/best_start_cluster`;
+
+        const promise = fetch(pythonApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ city, startHour: hour, duration: SHIFT_DURATION }),
-        }).then(res => {
+          body: JSON.stringify({ 
+              city_id: parseInt(city, 10), 
+              start_hour: hour, 
+              duration: SHIFT_DURATION 
+            }),
+        }).then(async res => {
             if (!res.ok) {
-                throw new Error(`Analysis for ${hour}:00 failed.`);
+                const errorData = await res.json();
+                throw new Error(`Analysis for ${hour}:00 failed: ${errorData.detail || 'Unknown error'}`);
             }
             return res.json();
         }).then(data => ({
@@ -122,11 +123,11 @@ export function ScheduleDrive({ city, currency }: ScheduleDriveProps) {
         <div className="space-y-4">
           <div className="flex justify-between items-center font-mono text-lg">
              <div>
-                <Label className="font-sans text-xs text-muted-foreground">Available From</Label>
+                <Label className="font-sans text-xs text-muted-foreground">Start Time</Label>
                 <p>{formatTime(timeRange[0])}</p>
              </div>
              <div>
-                <Label className="font-sans text-xs text-muted-foreground">Available Until</Label>
+                <Label className="font-sans text-xs text-muted-foreground">End Time</Label>
                 <p>{formatTime(timeRange[1])}</p>
              </div>
           </div>
