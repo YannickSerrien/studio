@@ -17,23 +17,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid "duration" parameter. Must be a number between 2 and 12.' }, { status: 400 });
     }
 
-    // Path to the Python executable and script
-    const pythonExecutable = '/usr/bin/python3';
+    const pythonExecutable = 'python3';
     const scriptPath = path.join(process.cwd(), 'src', 'server', 'dp_cli.py');
     const tempOutputFile = path.join(os.tmpdir(), `results-${Date.now()}.json`);
     const dateToday = new Date().toISOString().split('T')[0];
 
-    // Arguments for the script
-    const scriptArgs = [
-      scriptPath,
-      '--city', city,
-      '--date', dateToday,
-      '--duration', duration.toString(),
-      '--compare-schedules',
-      '--json', tempOutputFile
-    ];
+    const command = `${pythonExecutable} ${scriptPath} --city ${city} --date ${dateToday} --duration ${duration} --compare-schedules --json ${tempOutputFile}`;
 
-    const pythonProcess = spawn(pythonExecutable, scriptArgs);
+    const pythonProcess = spawn(command, {
+        shell: true,
+        env: {
+          ...process.env,
+          PYTHONPATH: path.join(process.cwd(), 'src', 'server'),
+        }
+    });
 
     let stdout = '';
     let stderr = '';
@@ -50,9 +47,8 @@ export async function POST(request: Request) {
       pythonProcess.on('close', async (code) => {
         if (code === 0) {
           try {
-             // The script writes to a file, so we read it.
              const resultData = await fs.readFile(tempOutputFile, 'utf-8');
-             await fs.unlink(tempOutputFile); // Clean up the temp file
+             await fs.unlink(tempOutputFile); 
              const result = JSON.parse(resultData);
              resolve(result);
           } catch (e: any) {
