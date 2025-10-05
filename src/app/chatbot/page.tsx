@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import type { Settings as AppSettings } from '@/app/lib/data';
-import { Header } from '../components/dashboard/header';
+import { Header } from '@/app/components/dashboard/header';
 
 type Message = {
   role: 'user' | 'model';
@@ -110,7 +110,7 @@ export default function ChatbotPage() {
       <Sidebar>
         <SidebarContent>
            <div className="p-4 sm:hidden">
-              <Header />
+              {/* Mobile Header Placeholder */}
             </div>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -129,6 +129,14 @@ export default function ChatbotPage() {
                 <SidebarMenuButton tooltip="Driving" isActive={pathname === '/driving'}>
                   <CarFront />
                   <span>Driving</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href="/availabilities">
+                <SidebarMenuButton tooltip="Availabilities" isActive={pathname === '/availabilities'}>
+                  <Calendar />
+                  <span>Availabilities</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -154,13 +162,11 @@ export default function ChatbotPage() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-col min-h-screen bg-background">
-          <div className="hidden sm:block">
-            <Header />
-          </div>
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/20">
             <div className="mx-auto max-w-3xl">
-              <Card className="h-[80vh] flex flex-col">
+              <Card className="h-[calc(100vh-120px)] flex flex-col">
                 <CardHeader className="flex flex-row items-center gap-2">
                   <Bot className="h-6 w-6 text-accent" />
                   <CardTitle>AI Assistant</CardTitle>

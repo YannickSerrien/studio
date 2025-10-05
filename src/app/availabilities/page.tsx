@@ -86,7 +86,7 @@ export default function AvailabilitiesPage() {
         <SidebarContent>
           <SidebarMenu>
             <div className="p-4 sm:hidden">
-              <Header />
+              {/* Mobile Header Placeholder */}
             </div>
             <SidebarMenuItem>
               <Link href="/">
@@ -131,11 +131,9 @@ export default function AvailabilitiesPage() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-col min-h-screen bg-background">
-          <div className="hidden sm:block">
-            <Header />
-          </div>
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-muted/20">
             <div className="mx-auto max-w-md">
               <h2 className="text-2xl font-bold mb-6">Availabilities</h2>
               <div className="bg-card border rounded-lg shadow-sm">

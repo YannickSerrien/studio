@@ -18,7 +18,7 @@ import {
   SidebarSeparator,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
+import { Bot, LayoutDashboard, Settings, CarFront, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
@@ -52,9 +52,8 @@ export default function Home() {
       <Sidebar>
         <SidebarContent>
           <SidebarMenu>
-            {/* This is the mobile-only header */}
-             <div className="p-4 sm:hidden">
-                <Header />
+            <div className="p-4 sm:hidden">
+              {/* Mobile Header Placeholder */}
             </div>
             <SidebarMenuItem>
               <Link href="/">
@@ -69,6 +68,14 @@ export default function Home() {
                 <SidebarMenuButton tooltip="Driving" isActive={pathname === '/driving'}>
                   <CarFront />
                   <span>Driving</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href="/availabilities">
+                <SidebarMenuButton tooltip="Availabilities" isActive={pathname === '/availabilities'}>
+                  <Calendar />
+                  <span>Availabilities</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -91,11 +98,9 @@ export default function Home() {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-col min-h-screen bg-background">
-          <div className="hidden sm:block">
-            <Header />
-          </div>
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 bg-muted/20">
             <div className="mx-auto max-w-7xl">
               <IncentiveTracker />
             </div>

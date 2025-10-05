@@ -1,6 +1,6 @@
 
 'use client';
-import { PanelLeft, Bot, LayoutDashboard, Settings } from 'lucide-react';
+import { PanelLeft, Bot, LayoutDashboard, Settings, CarFront, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -16,61 +16,72 @@ import { SettingsDialog } from './settings-dialog';
 export function Header() {
   const pathname = usePathname();
   const [settings, setSettings] = useState<AppSettings>({
-    currency: '$',
-    location: 'San Francisco, CA',
+    name: 'Karen',
+    currency: '€',
+    country: 'Netherlands',
+    city: '3',
   });
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
 
+  const navLinks = [
+    { href: '/', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
+    { href: '/driving', label: 'Driving', icon: <CarFront className="h-5 w-5" /> },
+    { href: '/availabilities', label: 'Availabilities', icon: <Calendar className="h-5 w-5" /> },
+    { href: '/chatbot', label: 'AI Chatbot', icon: <Bot className="h-5 w-5" /> },
+  ];
+
   return (
-    <header className="flex items-center justify-between p-4 sm:p-6 border-b">
-      <div className="flex items-center gap-4">
-         <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="sm:hidden">
-              <PanelLeft className="h-5 w-5" />
-              <span className="sr-only">Toggle Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="sm:max-w-xs">
-              <nav className="grid gap-2 text-lg font-medium">
-                 <Link
-                  href="/"
-                  className={`flex items-center gap-4 px-2.5 ${pathname === '/' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setSheetOpen(false)}
-                >
-                  <LayoutDashboard className="h-5 w-5" />
-                  Dashboard
-                </Link>
-                <Link
-                  href="/chatbot"
-                  className={`flex items-center gap-4 px-2.5 ${pathname === '/chatbot' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                   onClick={() => setSheetOpen(false)}
-                >
-                  <Bot className="h-5 w-5" />
-                  AI Chatbot
-                </Link>
-                <button
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground text-lg font-medium"
-                  onClick={() => {
-                    setSheetOpen(false);
-                    setSettingsOpen(true);
-                  }}
-                >
-                  <Settings className="h-5 w-5" />
-                  Settings
-                </button>
-              </nav>
-          </SheetContent>
-        </Sheet>
-        <h1 className="text-2xl sm:text-3xl font-bold font-headline tracking-tight">
-          DriveWise
-        </h1>
-      </div>
-       <SettingsDialog settings={settings} onSettingsChange={setSettings} open={isSettingsOpen} onOpenChange={setSettingsOpen}>
-          {/* This is a dummy trigger because a trigger is required, but we are opening the dialog programmatically. */}
-          <button className="hidden"></button>
-      </SettingsDialog>
-    </header>
+    <>
+      <header className="flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
+        <div className="flex items-center gap-4">
+          <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="sm:hidden">
+                <PanelLeft className="h-5 w-5" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="sm:max-w-xs">
+                <nav className="grid gap-2 text-lg font-medium">
+                  <Link
+                    href="/"
+                    className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base mb-4"
+                    onClick={() => setSheetOpen(false)}
+                  >
+                    <CarFront className="h-5 w-5 transition-all group-hover:scale-110" />
+                     <span className="sr-only">DriveWise</span>
+                  </Link>
+                  {navLinks.map(link => (
+                     <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`flex items-center gap-4 px-2.5 ${pathname === link.href ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                      onClick={() => setSheetOpen(false)}
+                    >
+                      {link.icon}
+                      {link.label}
+                    </Link>
+                  ))}
+                  <button
+                    className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground text-lg font-medium"
+                    onClick={() => {
+                      setSheetOpen(false);
+                      setSettingsOpen(true);
+                    }}
+                  >
+                    <Settings className="h-5 w-5" />
+                    Settings
+                  </button>
+                </nav>
+            </SheetContent>
+          </Sheet>
+          <h1 className="text-xl sm:text-2xl font-bold font-headline tracking-tight">
+            DriveWise
+          </h1>
+        </div>
+        <SettingsDialog settings={settings} onSettingsChange={setSettings} open={isSettingsOpen} onOpenChange={setSettingsOpen} />
+      </header>
+    </>
   );
 }
