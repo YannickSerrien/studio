@@ -21,7 +21,7 @@ export function Header() {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
 
   const navLinks = [
-    { href: '/', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
+    { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
     { href: '/driving', label: 'Driving', icon: <CarFront className="h-5 w-5" /> },
     { href: '/chatbot', label: 'AI Chatbot', icon: <Bot className="h-5 w-5" /> },
   ];
@@ -40,7 +40,7 @@ export function Header() {
             <SheetContent side="left" className="sm:max-w-xs">
                 <nav className="grid gap-2 text-lg font-medium">
                   <Link
-                    href="/"
+                    href="/dashboard"
                     className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base mb-4"
                     onClick={() => setSheetOpen(false)}
                   >

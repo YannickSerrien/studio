@@ -84,8 +84,8 @@ export default function AvailabilitiesPage() {
               {/* Mobile Header Placeholder */}
             </div>
             <SidebarMenuItem>
-              <Link href="/">
-                <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'}>
+              <Link href="/dashboard">
+                <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/dashboard'}>
                   <LayoutDashboard />
                   <span>Dashboard</span>
                 </SidebarMenuButton>

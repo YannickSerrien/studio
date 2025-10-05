@@ -2,6 +2,10 @@
 'use client';
 
 import { useState } from 'react';
+import { Header } from '@/app/components/dashboard/header';
+import { WeeklySummary } from '@/app/components/dashboard/weekly-summary';
+import { DailyHighlights } from '@/app/components/dashboard/daily-highlights';
+import { IncentiveTracker } from '@/app/components/dashboard/incentive-tracker';
 import {
   Sidebar,
   SidebarProvider,
@@ -16,13 +20,10 @@ import { Bot, LayoutDashboard, Settings, CarFront } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
-import { DriverStatus } from '@/app/components/dashboard/driver-status';
-import { ScheduleDrive } from '@/app/components/dashboard/schedule-drive';
-import { Header } from '@/app/components/dashboard/header';
 import { useSettings } from '@/app/contexts/settings-context';
 
 
-export default function DrivingPage() {
+export default function DashboardPage() {
   const { settings, setSettings } = useSettings();
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -43,7 +44,7 @@ export default function DrivingPage() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-            <SidebarMenuItem>
+             <SidebarMenuItem>
               <Link href="/driving">
                 <SidebarMenuButton tooltip="Driving" isActive={pathname === '/driving'}>
                   <CarFront />
@@ -74,10 +75,13 @@ export default function DrivingPage() {
           <Header />
           <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 bg-muted/20">
             <div className="mx-auto max-w-7xl">
-              <DriverStatus />
+              <IncentiveTracker currency={settings.currency} />
             </div>
             <div className="mx-auto max-w-7xl">
-              <ScheduleDrive city={settings.city} currency={settings.currency} />
+              <WeeklySummary currency={settings.currency} />
+            </div>
+            <div className="mx-auto max-w-7xl">
+              <DailyHighlights currency={settings.currency} />
             </div>
           </main>
         </div>

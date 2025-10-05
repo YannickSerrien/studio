@@ -110,10 +110,10 @@ export default function ChatbotPage() {
             </div>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/">
+              <Link href="/dashboard">
                 <SidebarMenuButton
                   tooltip="Dashboard"
-                  isActive={pathname === '/'}
+                  isActive={pathname === '/dashboard'}
                 >
                   <LayoutDashboard />
                   <span>Dashboard</span>
