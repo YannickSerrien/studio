@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bot, User, Send, Loader2, LayoutDashboard, Settings } from 'lucide-react';
+import { Bot, User, Send, Loader2, LayoutDashboard, Settings, Calendar, CarFront } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,6 +116,22 @@ export default function ChatbotPage() {
                 >
                   <LayoutDashboard />
                   <span>Dashboard</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href="/driving">
+                <SidebarMenuButton tooltip="Driving" isActive={pathname === '/driving'}>
+                  <CarFront />
+                  <span>Driving</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href="/availabilities">
+                <SidebarMenuButton tooltip="Availabilities" isActive={pathname === '/availabilities'}>
+                  <Calendar />
+                  <span>Availabilities</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>

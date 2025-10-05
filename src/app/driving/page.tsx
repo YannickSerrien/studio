@@ -1,11 +1,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Header } from '@/app/components/dashboard/header';
-import { WeeklySummary } from '@/app/components/dashboard/weekly-summary';
-import { DailyHighlights } from '@/app/components/dashboard/daily-highlights';
-import { IncentiveTracker } from '@/app/components/dashboard/incentive-tracker';
 import { WellnessNudge } from '@/app/components/dashboard/wellness-nudge';
 import { type Settings as AppSettings } from '@/app/lib/data';
 import {
@@ -20,32 +17,20 @@ import {
 } from '@/components/ui/sidebar';
 import { Bot, LayoutDashboard, Settings, Calendar, CarFront } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
-import { useDriverStatus } from '@/app/contexts/driver-status-context';
+import { DriverStatus } from '@/app/components/dashboard/driver-status';
+import { ScheduleDrive } from '@/app/components/dashboard/schedule-drive';
 
-export default function Home() {
+export default function DrivingPage() {
   const [settings, setSettings] = useState<AppSettings>({
     name: 'Karen',
     currency: '€',
     country: 'Netherlands',
     city: '3',
   });
-  const { showWellnessNudge, setShowWellnessNudge } = useDriverStatus();
   const pathname = usePathname();
-  const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  useEffect(() => {
-    if (showWellnessNudge) {
-      const queryParams = new URLSearchParams({
-        prompt: `Hey ${settings.name}, you've been driving for a while now. Time for a well-deserved break! Let me know if you'd like some ideas for how to best spend your break time.`
-      }).toString();
-      router.push(`/chatbot?${queryParams}`);
-      setShowWellnessNudge(false); // Reset the nudge to prevent re-triggering
-    }
-  }, [showWellnessNudge, router, settings.name, setShowWellnessNudge]);
-
 
   return (
     <SidebarProvider>
@@ -64,7 +49,7 @@ export default function Home() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+            <SidebarMenuItem>
               <Link href="/driving">
                 <SidebarMenuButton tooltip="Driving" isActive={pathname === '/driving'}>
                   <CarFront />
@@ -105,13 +90,10 @@ export default function Home() {
           </div>
           <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="mx-auto max-w-7xl">
-              <IncentiveTracker />
+              <DriverStatus />
             </div>
             <div className="mx-auto max-w-7xl">
-              <WeeklySummary currency={settings.currency} />
-            </div>
-            <div className="mx-auto max-w-7xl">
-              <DailyHighlights currency={settings.currency} />
+              <ScheduleDrive city={settings.city} />
             </div>
           </main>
           <WellnessNudge />
