@@ -6,7 +6,6 @@ import { Header } from '@/app/components/dashboard/header';
 import { WeeklySummary } from '@/app/components/dashboard/weekly-summary';
 import { DailyHighlights } from '@/app/components/dashboard/daily-highlights';
 import { IncentiveTracker } from '@/app/components/dashboard/incentive-tracker';
-import { WellnessNudge } from '@/app/components/dashboard/wellness-nudge';
 import { type Settings as AppSettings } from '@/app/lib/data';
 import {
   Sidebar,
@@ -103,7 +102,6 @@ export default function Home() {
               <DailyHighlights currency={settings.currency} />
             </div>
           </main>
-          <WellnessNudge />
         </div>
       </SidebarInset>
        <SettingsDialog settings={settings} onSettingsChange={setSettings} open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />

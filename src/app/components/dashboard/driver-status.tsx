@@ -6,8 +6,6 @@ import { Card } from '@/components/ui/card';
 import { Power, Pause, Play } from 'lucide-react';
 import { useDriverStatus } from '@/app/contexts/driver-status-context';
 
-const TIMER_START_SECONDS = 16190; // 4.5 hours - 10 seconds
-
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -37,7 +35,7 @@ export function DriverStatus() {
       setShowWellnessNudge(false); // Reset the nudge when going offline
     } else {
       // Going online
-      setDrivingSeconds(TIMER_START_SECONDS);
+      setDrivingSeconds(0); // Start timer from 0
       setIsDriving(true);
     }
   };

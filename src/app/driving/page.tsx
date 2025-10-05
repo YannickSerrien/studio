@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { WellnessNudge } from '@/app/components/dashboard/wellness-nudge';
 import { type Settings as AppSettings } from '@/app/lib/data';
 import {
   Sidebar,
@@ -85,7 +84,6 @@ export default function DrivingPage() {
               <ScheduleDrive city={settings.city} currency={settings.currency} />
             </div>
           </main>
-          <WellnessNudge />
         </div>
       </SidebarInset>
        <SettingsDialog settings={settings} onSettingsChange={setSettings} open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
