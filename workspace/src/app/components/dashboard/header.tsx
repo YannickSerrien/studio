@@ -12,7 +12,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { SettingsDialog } from './settings-dialog';
+import { SettingsDialog } from '@/app/components/dashboard/settings-dialog';
 import { useSettings } from '@/app/contexts/settings-context';
 
 
